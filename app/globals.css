@@ -1,0 +1,272 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Carbon Theme (Default) - Mechanical Warm Graphite & Cream */
+  --bg-color: #211F1C;
+  --fg-color: #F0E9DC;
+  --fg-muted: #8E8678;       /* High-contrast warm graphite for settings & icons */
+  --untyped: #605B51;        /* Dimmed warm graphite specifically for untyped letters */
+  --correct: #F0E9DC;        /* Clean Off-White for correctly typed text */
+  --error: #D96C58;          /* Red Switch */
+  --accent: #6C93D9;         /* Blue Switch Caret */
+  --accent-rgb: 108, 147, 217;
+  --keycap-bg: #2E2B27;
+  --keycap-border: #151412;
+  --keycap-text: #F0E9DC;
+  --modifier-bg: #1B1A18;
+  --modifier-border: #0B0A09;
+  --modifier-text: #948C7C;
+}
+
+[data-theme='serika'] {
+  --bg-color: #F2EBDB;       /* Warm light sand */
+  --fg-color: #323437;       /* Charcoal */
+  --fg-muted: #727068;       /* Readable charcoal-grey for settings & icons */
+  --untyped: #BDB6A6;        /* Faded light sand specifically for untyped letters */
+  --correct: #323437;        /* Clean dark charcoal for correct typed text */
+  --error: #C24C3D;
+  --accent: #E2B714;         /* Gold yellow */
+  --accent-rgb: 226, 183, 20;
+  --keycap-bg: #FFFFFF;
+  --keycap-border: #D2D9D4;
+  --keycap-text: #323437;
+  --modifier-bg: #DCD8CB;
+  --modifier-border: #C8C4B8;
+  --modifier-text: #707476;
+}
+
+[data-theme='nord'] {
+  --bg-color: #2E3440;       /* Nord slate blue */
+  --fg-color: #D8DEE9;       /* Frost snow */
+  --fg-muted: #8F9EB9;       /* Readable frost blue-grey for settings & icons */
+  --untyped: #606E88;        /* Dimmed slate blue specifically for untyped letters */
+  --correct: #D8DEE9;        /* Frost snow for correct typed text */
+  --error: #BF616A;
+  --accent: #88C0D0;         /* Polar blue */
+  --accent-rgb: 136, 192, 208;
+  --keycap-bg: #3B4252;
+  --keycap-border: #252A34;
+  --keycap-text: #D8DEE9;
+  --modifier-bg: #242933;
+  --modifier-border: #161A22;
+  --modifier-text: #7F8A9F;
+}
+
+[data-theme='sakura'] {
+  --bg-color: #F8F0F0;       /* Soft pink */
+  --fg-color: #442F2F;       /* Deep mahogany */
+  --fg-muted: #8E7373;       /* Readable deep pink-grey for settings & icons */
+  --untyped: #D8C0C0;        /* Faded soft pink specifically for untyped letters */
+  --correct: #442F2F;        /* Deep mahogany for correct typed text */
+  --error: #D66363;
+  --accent: #D16075;         /* Cherry pink */
+  --accent-rgb: 209, 96, 117;
+  --keycap-bg: #FFFFFF;
+  --keycap-border: #E8D7D7;
+  --keycap-text: #442F2F;
+  --modifier-bg: #ECDADA;
+  --modifier-border: #D9C3C3;
+  --modifier-text: #8C7575;
+}
+
+[data-theme='midnight'] {
+  --bg-color: #0A0D14;       /* Pitch blue-black */
+  --fg-color: #D1D6E0;       /* Slate ice */
+  --fg-muted: #8C97AC;       /* Readable light slate for settings & icons */
+  --untyped: #49546A;        /* Dimmed deep space grey specifically for untyped letters */
+  --correct: #D1D6E0;        /* Slate ice for correct typed text */
+  --error: #EC6A75;
+  --accent: #A277FF;         /* Electric purple */
+  --accent-rgb: 162, 119, 255;
+  --keycap-bg: #141923;
+  --keycap-border: #05070B;
+  --keycap-text: #D1D6E0;
+  --modifier-bg: #0F121A;
+  --modifier-border: #030406;
+  --modifier-text: #677185;
+}
+
+[data-theme='monokai'] {
+  --bg-color: #272822;       /* Warm grey */
+  --fg-color: #F8F8F2;       /* Warm white */
+  --fg-muted: #A3A08D;       /* Readable warm grey for settings & icons */
+  --untyped: #6E6D5F;        /* Dimmed warm graphite specifically for untyped letters */
+  --correct: #F8F8F2;        /* Warm white for correct typed text */
+  --error: #F92672;          /* Magenta pink */
+  --accent: #66D9EF;         /* Neon Cyan */
+  --accent-rgb: 102, 217, 239;
+  --keycap-bg: #3E3D32;
+  --keycap-border: #1C1C18;
+  --keycap-text: #F8F8F2;
+  --modifier-bg: #1C1C18;
+  --modifier-border: #0F0F0D;
+  --modifier-text: #8A8875;
+}
+
+@layer base {
+  html, body {
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background-color: var(--bg-color);
+    color: var(--fg-color);
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+}
+
+/* Hardware-accelerated theme circular clip-path reveal using View Transitions API */
+html {
+  view-transition-name: root;
+}
+
+/* Disable standard transitions/animations when view transition is running to avoid dual animation stutters */
+::view-transition {
+  navigation: auto;
+}
+
+::view-transition-group(root) {
+  animation-duration: 400ms;
+}
+
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  animation: 400ms cubic-bezier(0.1, 0.9, 0.2, 1) themeReveal;
+  mix-blend-mode: normal;
+  z-index: 999;
+}
+
+@keyframes themeReveal {
+  from {
+    clip-path: circle(0px at var(--click-x, 50%) var(--click-y, 50%));
+  }
+  to {
+    clip-path: circle(150vmax at var(--click-x, 50%) var(--click-y, 50%));
+  }
+}
+
+/* Suppress all general styles transitions when view transition active */
+html:active-view-transition,
+html:active-view-transition * {
+  transition: none !important;
+}
+
+/* Fallback theme transition overlay keyframes (for browsers without View Transitions support) */
+@keyframes themeShrink {
+  from {
+    clip-path: circle(150vmax at var(--click-x, 50%) var(--click-y, 50%));
+  }
+  to {
+    clip-path: circle(0px at var(--click-x, 50%) var(--click-y, 50%));
+  }
+}
+
+.animate-theme-shrink {
+  animation: themeShrink 650ms cubic-bezier(0.15, 0.85, 0.35, 1) forwards;
+}
+
+/* Caret Blinking Animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-caret {
+  animation: blink 1s step-end infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--fg-muted);
+  border-radius: 4px;
+  opacity: 0.3;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* 3D Tactile Keycap Styles */
+.keycap-container {
+  perspective: 200px;
+}
+
+.keycap {
+  background: var(--keycap-bg);
+  border: 1px solid var(--keycap-border);
+  box-shadow: 0 4px 0 0 var(--keycap-border), 
+              inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  transition: transform 0.05s ease, box-shadow 0.05s ease, background-color 0.15s ease;
+  transform: translateY(0px);
+}
+
+.keycap.pressed {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 var(--keycap-border),
+              inset 0 1px 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.keycap-modifier {
+  background: var(--modifier-bg);
+  border: 1px solid var(--modifier-border);
+  box-shadow: 0 4px 0 0 var(--modifier-border),
+              inset 0 1px 1px 0 rgba(255, 255, 255, 0.02);
+  color: var(--modifier-text);
+}
+
+.keycap-modifier.pressed {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 var(--modifier-border);
+}
+
+.keycap-esc {
+  background: #14b8a6; /* Default teal/cyan keycap */
+  border-color: #0d9488;
+  box-shadow: 0 4px 0 0 #0d9488;
+  color: #ffffff;
+}
+
+.keycap-esc.pressed {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 #0d9488;
+}
+
+.keycap.highlighted {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 4px 0 0 var(--accent), 
+              0 0 10px 0 rgba(var(--accent-rgb), 0.3);
+  color: var(--bg-color);
+}
+
+.keycap.highlighted.pressed {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 0 var(--accent);
+}
+
+
+
+/* Hide scrollbar utility but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

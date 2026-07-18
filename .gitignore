@@ -1,0 +1,18 @@
+# Next.js build output
+.next/
+out/
+build/
+
+# Node modules
+node_modules/
+
+# Local env files
+.env*.local
+
+# Diagnostic reports and dev-only artifacts
+lib/diagnostic_report.json
+cleanup.js
+
+# OS files
+.DS_Store
+Thumbs.db
