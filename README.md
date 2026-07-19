@@ -112,3 +112,13 @@ Start the production server:
 ```bash
 npm start
 ```
+
+---
+
+## 👤 Developer
+
+Designed and developed with ❤️ by **Adnan Ashraf**.
+* GitHub: [@adnanashraf-code](https://github.com/adnanashraf-code)
+* Focuses on building high-performance, premium, and visually stunning web applications.
+
+Feel free to check out my other repositories or star this project if you like it! 🌟
