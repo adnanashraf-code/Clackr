@@ -96,9 +96,18 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
 
     const animId = requestAnimationFrame(handleUpdateCaret);
     window.addEventListener("resize", handleUpdateCaret);
-    
+
+    // Re-measure after custom fonts finish loading (prevents misalignment on refresh)
+    let fontRafId: number | undefined;
+    if (typeof document !== "undefined" && document.fonts) {
+      document.fonts.ready.then(() => {
+        fontRafId = requestAnimationFrame(handleUpdateCaret);
+      });
+    }
+
     return () => {
       cancelAnimationFrame(animId);
+      if (fontRafId !== undefined) cancelAnimationFrame(fontRafId);
       window.removeEventListener("resize", handleUpdateCaret);
     };
   }, [typedInput, currentWordIndex, status]);
@@ -294,8 +303,8 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
             ))}
           </div>
 
-          {/* Dynamic Smooth Caret (Butter smooth hardware-accelerated GPU transition) */}
-          {isFocused && status !== "finished" && (
+          {/* Dynamic Smooth Caret — only visible while typing */}
+          {isFocused && status === "running" && (
             <div 
               className="absolute w-[2.5px] bg-clackr-accent rounded-full pointer-events-none z-10"
               style={{
