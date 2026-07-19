@@ -147,7 +147,9 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5 text-clackr-fg/60 text-xs font-mono uppercase tracking-wider">
               <span>wpm</span>
-              <Info className="w-3 h-3 opacity-60 cursor-help" title="Words Per Minute (correct chars / 5 / time)" />
+              <span title="Words Per Minute (correct chars / 5 / time)">
+                <Info className="w-3 h-3 opacity-60 cursor-help" />
+              </span>
             </div>
             <span className="font-mono text-7xl md:text-8xl font-extrabold text-clackr-accent leading-none mt-1">
               {finalWpm}

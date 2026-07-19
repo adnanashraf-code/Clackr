@@ -17,7 +17,7 @@ import { calculateWpm, calculateRawWpm, calculateAccuracy, calculateConsistency,
 import { generateWords } from "@/lib/wordGenerator";
 import { triggerConfetti } from "@/lib/confetti";
 
-export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement>) {
+export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | null>) {
   const dispatch = useDispatch();
   
   // Granular Redux selectors to optimize rendering and prevent unnecessary keystroke re-renders
