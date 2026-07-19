@@ -98,11 +98,8 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
 
   // Keystroke Handler
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Tab shortcut handling
-    if (e.key === "Tab") {
-      e.preventDefault();
-      playKeystrokeSound(true, "Tab");
-      handleReset();
+    // Ignore Escape and Tab in typing handler (handled globally in page.tsx)
+    if (e.key === "Escape" || e.key === "Tab") {
       return;
     }
 
@@ -113,8 +110,9 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
 
     const currentStatus = statusRef.current;
     
-    // Start test on first key press
-    if (currentStatus === "idle") {
+    // Start test on first key press - only if it is a typing key (space, backspace, or character)
+    const isTypingKey = e.key === " " || e.key === "Backspace" || e.key.length === 1;
+    if (currentStatus === "idle" && isTypingKey) {
       dispatch(startTest());
     }
 

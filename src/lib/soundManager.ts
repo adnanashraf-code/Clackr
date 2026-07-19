@@ -20,11 +20,40 @@ class SoundSynthesizer {
     this.soundVolume = volume;
   }
 
+  // Preload mechanical sound buffer on application startup to avoid fallback synth sound on first keypress
+  public preload() {
+    if (typeof window === "undefined") return;
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        try {
+          this.ctx = new AudioCtx();
+          this.loadMechBuffer();
+        } catch (e) {
+          // Silent catch to prevent errors in environments without Web Audio API support
+        }
+      }
+    }
+
+    // Early-resume: on the very first user gesture, wake up the AudioContext
+    // so it's already in "running" state when the user starts typing.
+    const earlyResume = () => {
+      if (this.ctx && this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
+      }
+      window.removeEventListener("click", earlyResume);
+      window.removeEventListener("keydown", earlyResume);
+      window.removeEventListener("touchstart", earlyResume);
+    };
+    window.addEventListener("click", earlyResume, { once: true });
+    window.addEventListener("keydown", earlyResume, { once: true });
+    window.addEventListener("touchstart", earlyResume, { once: true });
+  }
+
   // ── AudioContext bootstrap ─────────────────────────────────────────────────
   // Must be called synchronously inside a user-gesture handler (keydown/click).
   // Calls resume() fire-and-forget — browsers honour it because we're in
-  // the user-gesture call stack. We then schedule audio 50 ms in the future
-  // so the context has time to reach "running" state.
+  // the user-gesture call stack. Audio is scheduled near-instantly (3ms buffer).
   private initCtx(): boolean {
     if (typeof window === "undefined") return false;
 
@@ -131,79 +160,6 @@ class SoundSynthesizer {
     return true;
   }
 
-  // ── Synthesis fallback — 4-layer mechanical click ─────────────────────────
-  private playMechSynth(volume: number, key: string, now: number) {
-    const ctx = this.ctx!;
-    const pm = 0.94 + Math.random() * 0.12;
-
-    let thudS: number, thudE: number, thudD: number, thudV: number;
-    let snapS: number, snapE: number, snapD: number, snapV: number;
-    let noiseD: number, noiseV: number;
-    let bodyF: number, bodyD: number, bodyV: number;
-
-    if (key === " ") {
-      thudS = 95;  thudE = 38;  thudD = 0.07;  thudV = 0.9;
-      snapS = 420; snapE = 900; snapD = 0.018; snapV = 0.35;
-      noiseD = 0.025; noiseV = 0.15;
-      bodyF = 160; bodyD = 0.06; bodyV = 0.25;
-    } else if (key === "Backspace") {
-      thudS = 130; thudE = 55;  thudD = 0.045; thudV = 0.75;
-      snapS = 680; snapE = 1400; snapD = 0.012; snapV = 0.28;
-      noiseD = 0.018; noiseV = 0.12;
-      bodyF = 220; bodyD = 0.04; bodyV = 0.20;
-    } else {
-      thudS = 170; thudE = 68;  thudD = 0.032; thudV = 0.60;
-      snapS = 900; snapE = 1800; snapD = 0.009; snapV = 0.22;
-      noiseD = 0.012; noiseV = 0.10;
-      bodyF = 280; bodyD = 0.028; bodyV = 0.15;
-    }
-
-    // Layer 1 — low thud
-    const oT = ctx.createOscillator(), gT = ctx.createGain();
-    oT.type = "triangle";
-    oT.frequency.setValueAtTime(thudS * pm, now);
-    oT.frequency.exponentialRampToValueAtTime(thudE * pm, now + thudD);
-    gT.gain.setValueAtTime(volume * thudV, now);
-    gT.gain.exponentialRampToValueAtTime(0.0001, now + thudD);
-    oT.connect(gT); gT.connect(ctx.destination);
-    oT.start(now); oT.stop(now + thudD + 0.005);
-
-    // Layer 2 — high snap
-    const oS = ctx.createOscillator(), gS = ctx.createGain();
-    oS.type = "sine";
-    oS.frequency.setValueAtTime(snapS * pm, now);
-    oS.frequency.exponentialRampToValueAtTime(snapE * pm, now + snapD);
-    gS.gain.setValueAtTime(volume * snapV, now);
-    gS.gain.exponentialRampToValueAtTime(0.0001, now + snapD);
-    oS.connect(gS); gS.connect(ctx.destination);
-    oS.start(now); oS.stop(now + snapD + 0.003);
-
-    // Layer 3 — white noise burst (physical contact)
-    const sr = ctx.sampleRate;
-    const nLen = Math.ceil(sr * (noiseD + 0.005));
-    const nBuf = ctx.createBuffer(1, nLen, sr);
-    const nData = nBuf.getChannelData(0);
-    for (let i = 0; i < nLen; i++) nData[i] = Math.random() * 2 - 1;
-    const nSrc = ctx.createBufferSource();
-    nSrc.buffer = nBuf; nSrc.loop = false;
-    const bpf = ctx.createBiquadFilter();
-    bpf.type = "bandpass"; bpf.frequency.value = 3500 * pm; bpf.Q.value = 1.2;
-    const gN = ctx.createGain();
-    gN.gain.setValueAtTime(volume * noiseV, now);
-    gN.gain.exponentialRampToValueAtTime(0.0001, now + noiseD);
-    nSrc.connect(bpf); bpf.connect(gN); gN.connect(ctx.destination);
-    nSrc.start(now); nSrc.stop(now + noiseD + 0.005);
-
-    // Layer 4 — body resonance
-    const oB = ctx.createOscillator(), gB = ctx.createGain();
-    oB.type = "sine";
-    oB.frequency.setValueAtTime(bodyF * pm, now);
-    gB.gain.setValueAtTime(0, now);
-    gB.gain.setValueAtTime(volume * bodyV, now + 0.003);
-    gB.gain.exponentialRampToValueAtTime(0.0001, now + bodyD);
-    oB.connect(gB); gB.connect(ctx.destination);
-    oB.start(now); oB.stop(now + bodyD + 0.005);
-  }
 
   // ── Main entry point (SYNCHRONOUS — must stay sync for user-gesture chain) ──
   public playSound(
@@ -220,9 +176,9 @@ class SoundSynthesizer {
       const activeType = type || this.soundType;
       const activeVolume = volume !== undefined ? volume : this.soundVolume;
 
-      // Schedule slightly in future — gives the AudioContext 50 ms to resume
-      // from suspended state before nodes need to fire.
-      const now = ctx.currentTime + 0.05;
+      // Schedule almost immediately — only 3ms buffer for audio graph setup.
+      // The old 50ms delay caused a perceptible gap between keypress visual and audio.
+      const now = ctx.currentTime + 0.003;
       const rf = 0.92 + Math.random() * 0.16;
 
       // ── Mechanical ────────────────────────────────────────────────────────
@@ -230,8 +186,6 @@ class SoundSynthesizer {
         if (this.playMechFromBuffer(activeVolume, key, now)) return;
         // Kick off OGG load (async, doesn't block)
         this.loadMechBuffer();
-        // Synthesis while loading
-        this.playMechSynth(activeVolume, key, now);
         return;
       }
 

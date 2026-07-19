@@ -53,30 +53,47 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
     }
   };
 
-  // Tracking dynamic smooth caret placement based on active-char DOM selector
+  // Combined scroll + caret positioning: scroll FIRST (instant), then measure caret
   useEffect(() => {
-    const handleUpdateCaret = () => {
-      const activeEl = containerRef.current?.querySelector("#active-char") as HTMLElement;
-      if (activeEl) {
-        const parentEl = containerRef.current?.parentElement as HTMLElement;
-        if (parentEl) {
-          const activeRect = activeEl.getBoundingClientRect();
-          const parentRect = parentEl.getBoundingClientRect();
+    const container = containerRef.current;
 
-          const leftOffset = activeRect.left - parentRect.left;
-          const topOffset = activeRect.top - parentRect.top;
-          const elementHeight = activeRect.height || 26;
-
-          setCaretPos({
-            left: leftOffset + 2, // Calibrated +2px to align caret exactly next to the letter ink
-            top: topOffset + 1.5,
-            height: elementHeight - 4,
-          });
+    // ── Step 1: Instant scroll to keep active word visible ──
+    if (container) {
+      if (currentWordIndex === 0) {
+        container.scrollTop = 0;
+      } else {
+        const activeWordEl = container.children[currentWordIndex] as HTMLElement;
+        if (activeWordEl) {
+          const wordTop = activeWordEl.offsetTop;
+          if (wordTop > 90) {
+            container.scrollTo({ top: wordTop - 46, behavior: "auto" });
+          } else {
+            container.scrollTo({ top: 0, behavior: "auto" });
+          }
         }
       }
+    }
+
+    // ── Step 2: Measure caret position on next frame (after scroll settles) ──
+    const handleUpdateCaret = () => {
+      const activeEl = container?.querySelector("#active-char") as HTMLElement;
+      const wrapper = container?.parentElement; // The `relative p-2` wrapper that positions the caret
+      if (!activeEl || !container || !wrapper) return;
+
+      const activeRect = activeEl.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
+
+      const leftOffset = activeRect.left - wrapperRect.left;
+      const topOffset = activeRect.top - wrapperRect.top;
+      const elementHeight = activeRect.height || 26;
+
+      setCaretPos({
+        left: leftOffset + 2,
+        top: topOffset + 1.5,
+        height: elementHeight - 4,
+      });
     };
 
-    // Execute on frame render to align with React DOM lifecycle updates
     const animId = requestAnimationFrame(handleUpdateCaret);
     window.addEventListener("resize", handleUpdateCaret);
     
@@ -102,13 +119,11 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
   // Window-level keypress listener to capture focus if user types when blurred
   useEffect(() => {
     const handleWindowKeyDown = (e: KeyboardEvent) => {
-      // If modal is open or active element is a button/input elsewhere, don't hijack focus
       const active = document.activeElement;
       if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "BUTTON")) {
         return;
       }
       
-      // Focus on standard keyboard inputs (letters, space, symbols, numbers)
       if (
         !isFocused &&
         inputRef.current &&
@@ -139,36 +154,6 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
 
     return () => clearInterval(interval);
   }, [status, startTime, mode, duration, dispatch]);
-
-  // Line scrolling tracking
-  useEffect(() => {
-    if (!containerRef.current || currentWordIndex === 0) {
-      if (containerRef.current) {
-        containerRef.current.scrollTop = 0;
-      }
-      return;
-    }
-
-    const container = containerRef.current;
-    const activeWordEl = container.children[currentWordIndex] as HTMLElement;
-
-    if (activeWordEl) {
-      const wordTop = activeWordEl.offsetTop;
-
-      // Scroll when word moves below first 2 lines (~80px threshold)
-      if (wordTop > 90) {
-        container.scrollTo({
-          top: wordTop - 46,
-          behavior: "smooth",
-        });
-      } else {
-        container.scrollTo({
-          top: 0,
-          behavior: "smooth",
-        });
-      }
-    }
-  }, [currentWordIndex]);
 
   // Global keydown to focus typing area
   useEffect(() => {
@@ -302,7 +287,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
           {/* Words wrap box */}
           <div
             ref={containerRef}
-            className={`w-full max-w-6xl mx-auto flex flex-wrap gap-x-[10px] gap-y-0 ${containerHeightClass} overflow-hidden leading-tight px-1 select-none scroll-smooth ${fontFamily} ${!isFocused ? "blur-[3px] select-none pointer-events-none" : ""}`}
+            className={`w-full max-w-6xl mx-auto flex flex-wrap gap-x-[10px] gap-y-0 ${containerHeightClass} overflow-hidden leading-tight px-1 select-none ${fontFamily} ${!isFocused ? "blur-[3px] select-none pointer-events-none" : ""}`}
           >
             {words.map((_, idx) => (
               <Word key={idx} index={idx} />

@@ -26,6 +26,9 @@ export function ReduxProvider({ children }: ProviderProps) {
     // Run initial sync
     syncSettings();
 
+    // Preload sound buffers immediately (especially mechanical switch sound)
+    soundManager.preload();
+
     // Subscribe to store changes to keep soundManager in sync dynamically
     const unsubscribe = store.subscribe(syncSettings);
 
