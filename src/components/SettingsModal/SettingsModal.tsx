@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
@@ -25,6 +25,58 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const dispatch = useDispatch();
   const settings = useSelector((state: RootState) => state.settings);
   const modalRef = React.useRef<HTMLDivElement>(null);
+  
+  const history = useSelector((state: RootState) => state.results.history);
+  const localRuns = history ? history.length : 0;
+
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
+
+  // Fetch/Increment global visits count from public Abacus API on open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchVisits = async () => {
+      try {
+        const hasVisited = sessionStorage.getItem("clackr-session-visited");
+        let url = "https://abacus.jasoncameron.dev/get/clackr-typing-master/global-visits";
+        
+        if (!hasVisited) {
+          url = "https://abacus.jasoncameron.dev/hit/clackr-typing-master/global-visits";
+          sessionStorage.setItem("clackr-session-visited", "true");
+        }
+
+        let res = await fetch(url);
+        
+        // If GET returned 404, the counter hasn't been initialized on the server yet.
+        // Let's create/hit it dynamically!
+        if (res.status === 404 && url.includes("/get/")) {
+          url = "https://abacus.jasoncameron.dev/hit/clackr-typing-master/global-visits";
+          sessionStorage.setItem("clackr-session-visited", "true");
+          res = await fetch(url);
+        }
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.value === "number") {
+            setVisitorCount(data.value);
+            localStorage.setItem("clackr-cached-visits", String(data.value));
+            return;
+          }
+        }
+        throw new Error("Invalid response status: " + res.status);
+      } catch (err) {
+        // Silent fallback: use last cached real count or local runs count
+        const cached = localStorage.getItem("clackr-cached-visits");
+        if (cached) {
+          setVisitorCount(parseInt(cached) || 1);
+        } else {
+          setVisitorCount(localRuns + 1);
+        }
+      }
+    };
+
+    fetchVisits();
+  }, [isOpen, localRuns]);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -93,9 +145,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="flex justify-between items-center p-5 border-b border-clackr-muted/10">
           <div className="flex flex-col">
             <h2 className="font-mono text-lg font-bold text-clackr-fg">clackr settings</h2>
-            <span className="text-[10px] text-clackr-muted font-mono uppercase tracking-widest">
-              configure your mechanical space
-            </span>
+            <div className="flex items-center gap-1.5 mt-0.5 select-none font-mono">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-[8.5px] text-clackr-muted uppercase tracking-wider font-semibold">
+                {visitorCount !== null ? `${visitorCount.toLocaleString()} global visits` : "connecting..."}
+              </span>
+            </div>
           </div>
           <button
             onClick={onClose}

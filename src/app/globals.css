@@ -281,3 +281,17 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+/* Custom once-off spin animation for the restart icon */
+@keyframes spinOnce {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-spin-once {
+  animation: spinOnce 0.45s cubic-bezier(0.1, 0.8, 0.25, 1) forwards;
+}

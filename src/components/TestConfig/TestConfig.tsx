@@ -56,7 +56,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
   return (
     <div
-      className={`flex flex-nowrap md:flex-wrap items-center justify-start md:justify-center gap-2.5 md:gap-4 font-mono text-xs text-clackr-muted transition-all duration-300 w-full md:w-max max-w-full mx-auto z-20 overflow-x-auto md:overflow-visible no-scrollbar py-1 md:py-0 px-4 md:px-0 whitespace-nowrap ${
+      className={`flex flex-nowrap md:flex-wrap items-center justify-start md:justify-center gap-1.5 lg:gap-2 xl:gap-2.5 2xl:gap-3.5 font-mono text-[11px] lg:text-xs xl:text-[13px] 2xl:text-[14px] text-clackr-muted transition-all duration-300 w-full md:w-max max-w-full mx-auto z-20 overflow-x-auto md:overflow-visible no-scrollbar py-1 md:py-0 px-4 md:px-0 whitespace-nowrap ${
         isTyping ? "opacity-0 pointer-events-none -translate-y-2 scale-95" : "opacity-100"
       }`}
     >
@@ -126,7 +126,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
           <button
             key={m}
             onClick={() => dispatch(setMode(m))}
-            className={`px-2.5 py-0.5 rounded-md transition-all uppercase text-[10px] font-semibold tracking-wider ${
+            className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all uppercase text-[9px] lg:text-[10px] xl:text-[10.5px] 2xl:text-[11.5px] font-bold tracking-wider ${
               mode === m
                 ? "bg-clackr-accent/15 text-clackr-accent font-bold shadow-sm"
                 : "hover:text-clackr-fg hover:bg-clackr-fg/5"
@@ -175,9 +175,9 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
           </div>
         )}
 
-        {mode === "zen" && <span className="text-[10px] text-clackr-muted/40 uppercase font-semibold tracking-wider px-2 flex-shrink-0">zen mode</span>}
-        {mode === "quote" && <span className="text-[10px] text-clackr-muted/40 uppercase font-semibold tracking-wider px-2 flex-shrink-0">quotes mode</span>}
-        {mode === "code" && <span className="text-[10px] text-clackr-muted/40 uppercase font-semibold tracking-wider px-2 flex-shrink-0">code mode</span>}
+        {mode === "zen" && <span className="text-[9px] lg:text-[10px] xl:text-[10.5px] 2xl:text-[11.5px] text-clackr-muted/40 uppercase font-bold tracking-wider px-2 flex-shrink-0">zen mode</span>}
+        {mode === "quote" && <span className="text-[9px] lg:text-[10px] xl:text-[10.5px] 2xl:text-[11.5px] text-clackr-muted/40 uppercase font-bold tracking-wider px-2 flex-shrink-0">quotes mode</span>}
+        {mode === "code" && <span className="text-[9px] lg:text-[10px] xl:text-[10.5px] 2xl:text-[11.5px] text-clackr-muted/40 uppercase font-bold tracking-wider px-2 flex-shrink-0">code mode</span>}
       </div>
 
       {/* Group 5: Active Theme Quick Toggle */}

@@ -20,6 +20,15 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
   const [isFocused, setIsFocused] = useState(true);
   const [localTimer, setLocalTimer] = useState(0);
   const [caretPos, setCaretPos] = useState({ left: 0, top: 0, height: 24 });
+  const [isRotating, setIsRotating] = useState(false);
+
+  const handleRestartClick = () => {
+    setIsRotating(true);
+    onRestart();
+    setTimeout(() => {
+      setIsRotating(false);
+    }, 450);
+  };
 
   // Granular Redux selectors to optimize rendering and prevent unnecessary keystroke re-renders
   const words = useSelector((state: RootState) => state.test.words);
@@ -272,7 +281,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
         )}
       </div>
 
-      <div className={`relative w-full ${!keyboardEnabled ? "flex-1 flex flex-col justify-center" : ""}`}>
+      <div className={`relative w-full ${!keyboardEnabled ? "flex-1 flex flex-col justify-start pt-8 md:pt-16" : ""}`}>
         <div
           onClick={handleContainerClick}
           className={`relative p-2 cursor-text flex items-center justify-center w-full`}
@@ -321,11 +330,12 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
         {/* Restart Button Shortcut indicator */}
         <div className="flex justify-center items-center py-1">
           <button
-            onClick={onRestart}
+            onClick={handleRestartClick}
+            onMouseDown={(e) => e.preventDefault()}
             title="Restart Test (Tab)"
             className="p-2 rounded-xl text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all flex items-center justify-center font-mono text-xs"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
+            <RotateCcw className={`w-3.5 h-3.5 ${isRotating ? "animate-spin-once" : ""}`} />
           </button>
         </div>
 
@@ -333,7 +343,9 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
         {!isFocused && (
           <div 
             onClick={handleContainerClick}
-            className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-clackr-bg/80 backdrop-blur-[4px] transition-all duration-300 rounded-2xl cursor-pointer"
+            className={`absolute inset-0 z-30 flex flex-col items-center bg-clackr-bg/80 backdrop-blur-[4px] transition-all duration-300 rounded-2xl cursor-pointer ${
+              !keyboardEnabled ? "justify-start pt-24 md:pt-32" : "justify-center"
+            }`}
           >
             <div className="flex flex-col items-center gap-3 text-center px-4">
               <div className="p-3 rounded-full bg-clackr-accent/10 text-clackr-accent animate-bounce">
