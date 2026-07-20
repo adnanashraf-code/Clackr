@@ -37,8 +37,8 @@ export function ReduxProvider({ children }: ProviderProps) {
       const target = e.target as HTMLElement;
       if (!target) return;
 
-      // Exclude text input drag/selection to avoid double sounds during typing focus
-      if (target.tagName === "INPUT" && target.getAttribute("type") === "text") {
+      // Exclude all input fields (text, number, etc.) to prevent double click sound on focus
+      if (target.tagName === "INPUT") {
         return;
       }
 

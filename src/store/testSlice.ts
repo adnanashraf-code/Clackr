@@ -11,7 +11,7 @@ export interface TestState {
   mode: "time" | "words" | "quote" | "zen" | "code";
   duration: number; // For time mode (15, 30, 60, 120)
   wordCount: number; // For words mode (10, 25, 50, 100)
-  difficulty: "easy" | "hard";
+  difficulty: "easy" | "medium" | "hard";
   punctuation: boolean;
   numbers: boolean;
   capitals: boolean;
@@ -92,6 +92,34 @@ const testSlice = createSlice({
     setDifficulty(state, action: PayloadAction<TestState["difficulty"]>) {
       state.difficulty = action.payload;
       state.status = "idle";
+    },
+    setCustomTestSettings(
+      state,
+      action: PayloadAction<{
+        duration: number;
+        difficulty: TestState["difficulty"];
+        punctuation: boolean;
+        numbers: boolean;
+        capitals: boolean;
+      }>
+    ) {
+      state.mode = "time";
+      state.duration = action.payload.duration;
+      state.difficulty = action.payload.difficulty;
+      state.punctuation = action.payload.punctuation;
+      state.numbers = action.payload.numbers;
+      state.capitals = action.payload.capitals;
+      state.status = "idle";
+      state.typedInput = "";
+      state.typedWords = [];
+      state.currentWordIndex = 0;
+      state.startTime = null;
+      state.endTime = null;
+      state.wpmHistory = [];
+      state.totalKeystrokes = 0;
+      state.correctKeystrokes = 0;
+      state.errorKeystrokes = 0;
+      state.backspaceCount = 0;
     },
     togglePunctuation(state) {
       state.punctuation = !state.punctuation;
@@ -225,6 +253,7 @@ export const {
   setDuration,
   setWordCount,
   setDifficulty,
+  setCustomTestSettings,
   togglePunctuation,
   toggleNumbers,
   toggleCapitals,

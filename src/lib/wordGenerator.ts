@@ -2,7 +2,7 @@ import { EASY_WORDS, HARD_WORDS, QUOTES, CODE_SNIPPETS } from "./wordLists";
 
 interface GeneratorConfig {
   mode: "time" | "words" | "quote" | "zen" | "code";
-  difficulty: "easy" | "hard";
+  difficulty: "easy" | "medium" | "hard";
   punctuation: boolean;
   numbers: boolean;
   capitals: boolean;
@@ -46,7 +46,14 @@ export function generateWords(config: GeneratorConfig): string[] {
   const result: string[] = [];
 
   for (let i = 0; i < count; i++) {
-    let word = pool[Math.floor(Math.random() * pool.length)];
+    let word = "";
+    if (difficulty === "medium") {
+      const useEasy = Math.random() < 0.75;
+      const currentPool = useEasy ? EASY_WORDS : HARD_WORDS;
+      word = currentPool[Math.floor(Math.random() * currentPool.length)];
+    } else {
+      word = pool[Math.floor(Math.random() * pool.length)];
+    }
 
     // Inject numbers if enabled (10% chance)
     if (numbers && Math.random() < 0.12) {

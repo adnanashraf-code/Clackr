@@ -11,11 +11,15 @@ import {
   toggleCapitals,
 } from "@/store/testSlice";
 import { setTheme, SettingsState } from "@/store/settingsSlice";
-import { Palette } from "lucide-react";
+import { Palette, Clock } from "lucide-react";
 
 const THEMES: SettingsState["theme"][] = ["carbon", "serika", "nord", "sakura", "midnight", "monokai"];
 
-export default function TestConfig() {
+interface TestConfigProps {
+  onOpenCustomTest?: () => void;
+}
+
+export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
   const dispatch = useDispatch();
   const { status, mode, duration, wordCount, difficulty, punctuation, numbers, capitals } = useSelector(
     (state: RootState) => state.test
@@ -184,6 +188,16 @@ export default function TestConfig() {
         aria-label="Toggle next visual theme"
       >
         <Palette className="w-3.5 h-3.5 text-clackr-accent" />
+      </button>
+
+      {/* Group 6: Custom Test Panel */}
+      <button
+        onClick={onOpenCustomTest}
+        className="flex items-center justify-center p-1.5 bg-clackr-fg/[0.03] border border-clackr-muted/5 rounded-lg shadow-inner text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all duration-200 flex-shrink-0"
+        title="Custom Test Setup"
+        aria-label="Open custom test configuration"
+      >
+        <Clock className="w-3.5 h-3.5 text-clackr-accent" />
       </button>
     </div>
   );

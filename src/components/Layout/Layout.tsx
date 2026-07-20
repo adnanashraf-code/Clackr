@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Keyboard, Settings, History, Menu } from "lucide-react";
+import { Keyboard, Settings, History, Menu, Clock } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { toggleKeyboard } from "@/store/settingsSlice";
@@ -20,11 +20,12 @@ interface LayoutProps {
   children: React.ReactNode;
   onOpenSettings: () => void;
   onOpenHistory: () => void;
+  onOpenCustomTest?: () => void;
   onClickLogo?: () => void;
   scrollable?: boolean;
 }
 
-export default function Layout({ children, onOpenSettings, onOpenHistory, onClickLogo, scrollable = false }: LayoutProps) {
+export default function Layout({ children, onOpenSettings, onOpenHistory, onOpenCustomTest, onClickLogo, scrollable = false }: LayoutProps) {
   const dispatch = useDispatch();
   const { keyboardEnabled } = useSelector((state: RootState) => state.settings);
   const { highScore } = useSelector((state: RootState) => state.results);
@@ -92,7 +93,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onClic
         {/* Center: Configuration Options or Results Dashboard Header (Hidden on mobile, center flex-1 on desktop) */}
         <div className="hidden md:flex md:flex-1 justify-center w-full overflow-hidden">
           {status !== "finished" ? (
-            <TestConfig />
+            <TestConfig onOpenCustomTest={onOpenCustomTest} />
           ) : (
             <div className="flex items-center gap-2.5 px-4 py-2 rounded-full border border-clackr-accent/15 bg-clackr-accent/5 text-xs font-mono tracking-widest text-clackr-accent uppercase font-bold shadow-sm animate-fadeIn">
               <span className="relative flex h-2 w-2">
@@ -271,6 +272,16 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onClic
                   >
                     <History className="w-3.5 h-3.5 text-clackr-accent" />
                     <span>View History</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      onOpenCustomTest?.();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded hover:bg-clackr-fg/5 text-left text-clackr-muted hover:text-clackr-fg transition-all"
+                  >
+                    <Clock className="w-3.5 h-3.5 text-clackr-accent" />
+                    <span>Custom Test Setup</span>
                   </button>
                   <button
                     onClick={() => {

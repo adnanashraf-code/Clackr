@@ -15,6 +15,7 @@ import VirtualKeyboard from "@/components/VirtualKeyboard/VirtualKeyboard";
 import ResultsPanel from "@/components/ResultsPanel/ResultsPanel";
 import SettingsModal from "@/components/SettingsModal/SettingsModal";
 import HistoryModal from "@/components/HistoryModal/HistoryModal";
+import CustomTestModal from "@/components/CustomTestModal/CustomTestModal";
 
 export default function Home() {
   const dispatch = useDispatch();
@@ -25,6 +26,7 @@ export default function Home() {
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isCustomOpen, setIsCustomOpen] = useState(false);
 
   // Handler to retry the exact same word list
   const handleRestart = React.useCallback(() => {
@@ -61,12 +63,13 @@ export default function Home() {
         soundManager.playSound(undefined, undefined, "Escape");
         setIsSettingsOpen((prev) => !prev);
         setIsHistoryOpen(false);
+        setIsCustomOpen(false);
         return;
       }
 
       // Tab key quick restart (works in all test states)
       if (e.key === "Tab") {
-        if (isSettingsOpen || isHistoryOpen) return;
+        if (isSettingsOpen || isHistoryOpen || isCustomOpen) return;
         e.preventDefault();
         soundManager.playSound(undefined, undefined, "Tab");
         if (status === "finished") {
@@ -113,6 +116,7 @@ export default function Home() {
     <Layout
       onOpenSettings={() => setIsSettingsOpen(true)}
       onOpenHistory={() => setIsHistoryOpen(true)}
+      onOpenCustomTest={() => setIsCustomOpen(true)}
       onClickLogo={handleNextTest}
       scrollable={status === "finished" || (isMobile && !isMobileDismissed)}
     >
@@ -173,6 +177,7 @@ export default function Home() {
       {/* Application Modals */}
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
       <HistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
+      <CustomTestModal isOpen={isCustomOpen} onClose={() => setIsCustomOpen(false)} />
     </Layout>
   );
 }
