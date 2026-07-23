@@ -1,4 +1,4 @@
-import { EASY_WORDS, HARD_WORDS, NATURAL_SENTENCES, QUOTES, CODE_SNIPPETS } from "./wordLists";
+import { EASY_WORDS, HARD_WORDS, EASY_SENTENCES, HARD_SENTENCES, NATURAL_SENTENCES, QUOTES, CODE_SNIPPETS } from "./wordLists";
 
 interface GeneratorConfig {
   mode: "time" | "words" | "quote" | "zen" | "code";
@@ -56,36 +56,37 @@ export function generateWords(config: GeneratorConfig): string[] {
     targetCount = 120;
   }
 
-  // Build raw words list from natural sentences and dictionary pools
+  // Build raw words list from dedicated difficulty sentence & word pools
   let rawWords: string[] = [];
 
-  // Start with a natural sentence to give immediate grammatical rhythm
-  let sentenceIdx = Math.floor(Math.random() * NATURAL_SENTENCES.length);
-  if (NATURAL_SENTENCES.length > 1 && sentenceIdx === lastSentenceIndex) {
-    sentenceIdx = (sentenceIdx + 1) % NATURAL_SENTENCES.length;
+  const sentencesPool = difficulty === "easy" 
+    ? EASY_SENTENCES 
+    : difficulty === "hard" 
+      ? HARD_SENTENCES 
+      : NATURAL_SENTENCES;
+
+  const shortEasyPool = EASY_WORDS.filter((w) => w.length <= 5);
+  const wordPool = difficulty === "easy" 
+    ? shortEasyPool 
+    : HARD_WORDS;
+
+  // Start with a natural sentence from the selected difficulty pool
+  let sentenceIdx = Math.floor(Math.random() * sentencesPool.length);
+  if (sentencesPool.length > 1 && sentenceIdx === lastSentenceIndex) {
+    sentenceIdx = (sentenceIdx + 1) % sentencesPool.length;
   }
   lastSentenceIndex = sentenceIdx;
 
-  const initialSentence = NATURAL_SENTENCES[sentenceIdx].split(" ");
+  const initialSentence = sentencesPool[sentenceIdx].split(" ");
   rawWords.push(...initialSentence);
 
-  // Determine main word pool for remaining words
-  const primaryPool = difficulty === "easy" ? EASY_WORDS : HARD_WORDS;
-
   while (rawWords.length < targetCount + 50) {
-    // 50% chance to append another natural sentence, 50% chance to sample from word pool
-    if (Math.random() < 0.5) {
-      const randomSent = NATURAL_SENTENCES[Math.floor(Math.random() * NATURAL_SENTENCES.length)].split(" ");
+    // 60% chance to append another natural sentence, 40% chance to sample from word pool
+    if (Math.random() < 0.6) {
+      const randomSent = sentencesPool[Math.floor(Math.random() * sentencesPool.length)].split(" ");
       rawWords.push(...randomSent);
     } else {
-      let word = "";
-      if (difficulty === "medium") {
-        const useEasy = Math.random() < 0.75;
-        const currentPool = useEasy ? EASY_WORDS : HARD_WORDS;
-        word = currentPool[Math.floor(Math.random() * currentPool.length)];
-      } else {
-        word = primaryPool[Math.floor(Math.random() * primaryPool.length)];
-      }
+      const word = wordPool[Math.floor(Math.random() * wordPool.length)];
       rawWords.push(word);
     }
   }

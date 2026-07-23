@@ -58,6 +58,51 @@ export const HARD_WORDS = [
   "resilience", "serendipity", "transcendent", "unprecedented", "verisimilitude", "whimsical", "xenophobia"
 ];
 
+export const EASY_SENTENCES = [
+  "the sun is up and bright today",
+  "we can run fast and play all day",
+  "keep your mind calm and quiet",
+  "do your best and make it count",
+  "it is a good day to learn and grow",
+  "work hard and fly high in the sky",
+  "stay true to your goals and dreams",
+  "time flies when you have good fun",
+  "small steps take us very far away",
+  "live with joy and smile every day",
+  "the best way to start is right now",
+  "kind words fill our hearts with love",
+  "look at the stars shining in the dark",
+  "focus on your work and do your best",
+  "read a good book and expand your mind",
+  "water is life so drink it every day",
+  "walk with hope and never look back",
+  "great things take time so keep going",
+  "peace of mind brings real happiness",
+  "stay safe and take good care of you",
+  "hope is a light in the dark night",
+  "be kind to all people you meet today",
+  "open your heart to new ideas and thoughts",
+  "every new step gets you close to your goal",
+  "trust yourself and believe in your power"
+];
+
+export const HARD_SENTENCES = [
+  "extraordinary achievements require relentless perseverance and unwavering dedication",
+  "technological innovation transforms traditional infrastructure into dynamic digital ecosystems",
+  "philosophical inquiries challenge fundamental assumptions about human consciousness",
+  "meticulous documentation ensures seamless collaboration across multidisciplinary engineering teams",
+  "environmental sustainability demands comprehensive strategies and international cooperation",
+  "architectural aesthetics synthesize functional ergonomics with visionary artistic craftsmanship",
+  "cryptographic protocols safeguard sensitive financial transactions across global networks",
+  "scientific discoveries illuminate complex natural phenomena through empirical experimentation",
+  "systematic optimization minimizes computational complexity while maximizing throughput",
+  "intellectual curiosity drives continuous learning and breakthroughs in artificial intelligence",
+  "sophisticated algorithms analyze multidimensional data streams with unprecedented accuracy",
+  "entrepreneurial resilience transforms ambitious concepts into sustainable market innovations",
+  "interdisciplinary research bridges theoretical foundation with pragmatic industrial application",
+  "epistemological discussions reframe traditional methodologies within contemporary paradigms"
+];
+
 export const NATURAL_SENTENCES = [
   "the quick brown fox jumps over the lazy dog",
   "every new day brings fresh opportunities to learn and build great things",
