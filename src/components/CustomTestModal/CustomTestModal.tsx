@@ -171,7 +171,7 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
           
           {/* Duration Preset Selector */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] text-clackr-muted uppercase font-bold tracking-wider flex items-center justify-between">
+            <label className="text-[10px] text-clackr-fg/90 uppercase font-bold tracking-wider flex items-center justify-between">
               <span>test duration</span>
               <Clock className="w-3 h-3 text-clackr-accent" />
             </label>
@@ -196,8 +196,8 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
                   }}
                   className={`py-1.5 text-[10px] border rounded-lg transition-all ${
                     selectedPreset === p.value
-                      ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold"
-                      : "text-clackr-muted border-clackr-muted/10 hover:text-clackr-fg hover:bg-clackr-fg/5"
+                      ? "text-clackr-accent border-clackr-accent/40 bg-clackr-accent/15 font-extrabold shadow-sm"
+                      : "text-clackr-fg/80 border-clackr-muted/20 hover:text-clackr-fg hover:bg-clackr-fg/10 font-semibold"
                   }`}
                 >
                   {p.label}
@@ -211,8 +211,8 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
                 }}
                 className={`py-1.5 text-[10px] border rounded-lg transition-all ${
                   selectedPreset === "custom"
-                    ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold"
-                    : "text-clackr-muted border-clackr-muted/10 hover:text-clackr-fg hover:bg-clackr-fg/5"
+                    ? "text-clackr-accent border-clackr-accent/40 bg-clackr-accent/15 font-extrabold shadow-sm"
+                    : "text-clackr-fg/80 border-clackr-muted/20 hover:text-clackr-fg hover:bg-clackr-fg/10 font-semibold"
                 }`}
               >
                 Custom
@@ -233,15 +233,15 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
                     setDuration(val);
                     setErrorText("");
                   }}
-                  className="w-full border rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:border-clackr-accent focus:ring-1 focus:ring-clackr-accent transition-all shadow-inner"
+                  className="w-full border rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-clackr-accent focus:ring-1 focus:ring-clackr-accent transition-all shadow-inner"
                   style={{
                     backgroundColor: "var(--bg-color)",
                     color: "var(--fg-color)",
-                    borderColor: "rgba(128, 128, 128, 0.2)"
+                    borderColor: "rgba(128, 128, 128, 0.3)"
                   }}
                   placeholder="Enter seconds (e.g. 30)"
                 />
-                <span className="text-[8px] text-clackr-muted tracking-wide mt-0.5 pl-1 uppercase font-semibold">
+                <span className="text-[8.5px] text-clackr-fg/75 tracking-wide mt-0.5 pl-1 uppercase font-bold">
                   * custom duration is configured in seconds (5s to 3600s)
                 </span>
               </div>
@@ -250,12 +250,12 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
 
           {/* Difficulty Level Selector */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] text-clackr-muted uppercase font-bold tracking-wider flex items-center gap-1.5">
+            <label className="text-[10px] text-clackr-fg/90 uppercase font-bold tracking-wider flex items-center gap-1.5">
               <span>difficulty level</span>
-              <HelpCircle className="w-3 h-3 text-clackr-muted/40" />
+              <HelpCircle className="w-3 h-3 text-clackr-fg/50" />
             </label>
             <div className="flex gap-2 select-none">
-              {(["easy", "medium", "hard"] as const).map((diff) => (
+              {(["easy", "hard"] as const).map((diff) => (
                 <button
                   key={diff}
                   onClick={() => {
@@ -263,8 +263,8 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
                   }}
                   className={`flex-1 py-2 text-xs border rounded-xl capitalize transition-all ${
                     difficulty === diff
-                      ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold shadow-sm"
-                      : "text-clackr-muted border-clackr-muted/10 hover:text-clackr-fg hover:bg-clackr-fg/5"
+                      ? "text-clackr-accent border-clackr-accent/40 bg-clackr-accent/15 font-extrabold shadow-sm"
+                      : "text-clackr-fg/80 border-clackr-muted/20 hover:text-clackr-fg hover:bg-clackr-fg/10 font-semibold"
                   }`}
                 >
                   {diff}
@@ -275,13 +275,13 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
 
           {/* Modifiers Grid */}
           <div className="flex flex-col gap-2 select-none">
-            <label className="text-[10px] text-clackr-muted uppercase font-bold tracking-wider">
+            <label className="text-[10px] text-clackr-fg/90 uppercase font-bold tracking-wider">
               text contents modifiers
             </label>
             <div className="grid grid-cols-3 gap-2.5">
               {[
                 { id: "punctuation", label: "@ punctuation", val: punctuation, set: setPunctuation },
-                { id: "numbers", label: "№ numbers", val: numbers, set: setNumbers },
+                { id: "numbers", label: "# numbers", val: numbers, set: setNumbers },
                 { id: "capitals", label: "Aa capitals", val: capitals, set: setCapitals },
               ].map((mod) => (
                 <button
@@ -289,10 +289,10 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
                   onClick={() => {
                     mod.set(!mod.val);
                   }}
-                  className={`py-2 text-[10px] border rounded-xl font-medium transition-all ${
+                  className={`py-2 text-[10px] border rounded-xl transition-all ${
                     mod.val
-                      ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold"
-                      : "text-clackr-muted border-clackr-muted/10 hover:text-clackr-fg hover:bg-clackr-fg/5"
+                      ? "text-clackr-accent border-clackr-accent/40 bg-clackr-accent/15 font-extrabold shadow-sm"
+                      : "text-clackr-fg/80 border-clackr-muted/20 hover:text-clackr-fg hover:bg-clackr-fg/10 font-semibold"
                   }`}
                 >
                   {mod.label}

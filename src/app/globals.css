@@ -22,19 +22,19 @@
 
 [data-theme='serika'] {
   --bg-color: #F2EBDB;       /* Warm light sand */
-  --fg-color: #1E2022;       /* Deep charcoal */
-  --fg-muted: #504D45;       /* Crisp dark charcoal-grey for settings & icons */
-  --untyped: #6E685C;        /* Dark, crisp, high-contrast text for untyped letters */
-  --correct: #1E2022;        /* Clean dark charcoal for correct typed text */
+  --fg-color: #141516;       /* Deep high-contrast charcoal */
+  --fg-muted: #2E2A22;       /* Crisp dark charcoal brown for labels & icons */
+  --untyped: #3B362C;        /* Very dark crisp contrast for untyped letters */
+  --correct: #141516;        /* Clean deep black-charcoal for correct text */
   --error: #D63031;          /* Vivid Deep Red */
-  --accent: #D4A70F;         /* Deep gold yellow */
-  --accent-rgb: 212, 167, 15;
+  --accent: #B88E05;         /* Crisp rich gold yellow */
+  --accent-rgb: 184, 142, 5;
   --keycap-bg: #FFFFFF;
   --keycap-border: #D2D9D4;
-  --keycap-text: #1E2022;
-  --modifier-bg: #DCD8CB;
+  --keycap-text: #141516;
+  --modifier-bg: #E2DDD0;
   --modifier-border: #C8C4B8;
-  --modifier-text: #484640;
+  --modifier-text: #2E2A22;
 }
 
 [data-theme='nord'] {
@@ -56,19 +56,19 @@
 
 [data-theme='sakura'] {
   --bg-color: #F8F0F0;       /* Soft pink */
-  --fg-color: #261616;       /* Deep mahogany */
-  --fg-muted: #563E3E;       /* Crisp deep mahogany for settings & icons */
-  --untyped: #7A5B5B;        /* Dark, crisp, high-contrast text for untyped letters */
-  --correct: #261616;        /* Deep mahogany for correct typed text */
+  --fg-color: #1A0D0D;       /* Deep dark mahogany */
+  --fg-muted: #331F1F;       /* Crisp dark mahogany for settings & icons */
+  --untyped: #422929;        /* Very dark crisp contrast for untyped letters */
+  --correct: #1A0D0D;        /* Clean deep mahogany for correct text */
   --error: #E84118;          /* Vivid Cherry Crimson */
-  --accent: #C24D63;         /* Deep cherry pink */
-  --accent-rgb: 194, 77, 99;
+  --accent: #B03A50;         /* Rich deep cherry pink */
+  --accent-rgb: 176, 58, 80;
   --keycap-bg: #FFFFFF;
   --keycap-border: #E8D7D7;
-  --keycap-text: #261616;
+  --keycap-text: #1A0D0D;
   --modifier-bg: #ECDADA;
   --modifier-border: #D9C3C3;
-  --modifier-text: #563E3E;
+  --modifier-text: #331F1F;
 }
 
 [data-theme='midnight'] {

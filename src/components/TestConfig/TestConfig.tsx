@@ -50,7 +50,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
   return (
     <div
-      className={`flex flex-nowrap items-center justify-center gap-1 md:gap-1.5 lg:gap-2 font-mono text-[10px] md:text-[11px] lg:text-xs text-clackr-muted transition-all duration-300 w-max max-w-full mx-auto z-20 overflow-x-auto no-scrollbar py-1 px-1 whitespace-nowrap ${
+      className={`flex flex-nowrap items-center justify-center gap-1.5 md:gap-2 xl:gap-2.5 font-mono text-xs md:text-xs xl:text-[13px] 2xl:text-[14px] text-clackr-muted transition-all duration-300 w-max max-w-full mx-auto z-20 overflow-x-auto no-scrollbar py-1 px-1 whitespace-nowrap ${
         isTyping ? "opacity-0 pointer-events-none -translate-y-2 scale-95" : "opacity-100"
       }`}
     >
@@ -58,7 +58,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
       <div className="flex items-center bg-clackr-fg/[0.03] border border-clackr-muted/5 rounded-lg p-0.5 shadow-inner gap-0.5 flex-shrink-0">
         <button
           onClick={() => dispatch(togglePunctuation())}
-          className={`px-1.5 md:px-2 lg:px-2.5 py-0.5 rounded-md transition-all ${
+          className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
             punctuation
               ? "text-clackr-accent font-bold bg-clackr-accent/15 shadow-sm"
               : "hover:text-clackr-fg hover:bg-clackr-fg/5"
@@ -69,7 +69,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
         <button
           onClick={() => dispatch(toggleNumbers())}
-          className={`px-1.5 md:px-2 lg:px-2.5 py-0.5 rounded-md transition-all ${
+          className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
             numbers
               ? "text-clackr-accent font-bold bg-clackr-accent/15 shadow-sm"
               : "hover:text-clackr-fg hover:bg-clackr-fg/5"
@@ -80,7 +80,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
         <button
           onClick={() => dispatch(toggleCapitals())}
-          className={`px-1.5 md:px-2 lg:px-2.5 py-0.5 rounded-md transition-all ${
+          className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
             capitals
               ? "text-clackr-accent font-bold bg-clackr-accent/15 shadow-sm"
               : "hover:text-clackr-fg hover:bg-clackr-fg/5"
@@ -90,13 +90,13 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
         </button>
       </div>
 
-      {/* Group 2: Difficulty Selection (Easy, Medium, Hard) */}
+      {/* Group 2: Difficulty Selection (Easy, Hard) */}
       <div className="flex items-center bg-clackr-fg/[0.03] border border-clackr-muted/5 rounded-lg p-0.5 shadow-inner gap-0.5 flex-shrink-0">
-        {(["easy", "medium", "hard"] as const).map((d) => (
+        {(["easy", "hard"] as const).map((d) => (
           <button
             key={d}
             onClick={() => dispatch(setDifficulty(d))}
-            className={`px-1.5 md:px-2 lg:px-2.5 py-0.5 rounded-md transition-all capitalize ${
+            className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all capitalize ${
               difficulty === d
                 ? "text-clackr-accent font-bold bg-clackr-accent/15 shadow-sm"
                 : "hover:text-clackr-fg hover:bg-clackr-fg/5"
@@ -113,7 +113,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
           <button
             key={m}
             onClick={() => dispatch(setMode(m))}
-            className={`px-1.5 md:px-2 lg:px-2.5 py-0.5 rounded-md transition-all uppercase text-[9px] md:text-[10px] lg:text-[11px] font-bold tracking-wider ${
+            className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all uppercase text-[10px] md:text-[11px] lg:text-xs font-bold tracking-wider ${
               mode === m
                 ? "bg-clackr-accent/15 text-clackr-accent font-bold shadow-sm"
                 : "hover:text-clackr-fg hover:bg-clackr-fg/5"
@@ -132,7 +132,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
               <button
                 key={d}
                 onClick={() => dispatch(setDuration(d))}
-                className={`px-1.5 md:px-2 lg:px-2.5 py-0.5 rounded-md transition-all ${
+                className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
                   duration === d
                     ? "bg-clackr-accent/15 text-clackr-accent font-bold shadow-sm"
                     : "hover:text-clackr-fg hover:bg-clackr-fg/5"
@@ -150,7 +150,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
               <button
                 key={w}
                 onClick={() => dispatch(setWordCount(w))}
-                className={`px-1.5 md:px-2 lg:px-2.5 py-0.5 rounded-md transition-all ${
+                className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
                   wordCount === w
                     ? "bg-clackr-accent/15 text-clackr-accent font-bold shadow-sm"
                     : "hover:text-clackr-fg hover:bg-clackr-fg/5"
@@ -162,9 +162,9 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
           </div>
         )}
 
-        {mode === "zen" && <span className="text-[9px] md:text-[10px] text-clackr-muted/40 uppercase font-bold tracking-wider px-1.5 flex-shrink-0">zen mode</span>}
-        {mode === "quote" && <span className="text-[9px] md:text-[10px] text-clackr-muted/40 uppercase font-bold tracking-wider px-1.5 flex-shrink-0">quotes mode</span>}
-        {mode === "code" && <span className="text-[9px] md:text-[10px] text-clackr-muted/40 uppercase font-bold tracking-wider px-1.5 flex-shrink-0">code mode</span>}
+        {mode === "zen" && <span className="text-[10px] md:text-[11px] text-clackr-muted/40 uppercase font-bold tracking-wider px-2 flex-shrink-0">zen mode</span>}
+        {mode === "quote" && <span className="text-[10px] md:text-[11px] text-clackr-muted/40 uppercase font-bold tracking-wider px-2 flex-shrink-0">quotes mode</span>}
+        {mode === "code" && <span className="text-[10px] md:text-[11px] text-clackr-muted/40 uppercase font-bold tracking-wider px-2 flex-shrink-0">code mode</span>}
       </div>
 
       {/* Group 5: Active Theme Quick Toggle */}
