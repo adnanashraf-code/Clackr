@@ -290,12 +290,13 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
           <input
             ref={inputRef}
             type="text"
+            inputMode="text"
             value={typedInput}
             onChange={() => {}} // Controlled via onKeyDown for absolute character timing
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            className="absolute opacity-0 pointer-events-none w-0 h-0"
+            className="absolute opacity-0 pointer-events-none w-0 h-0 text-base"
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"

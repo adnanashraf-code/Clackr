@@ -118,46 +118,9 @@ export default function Home() {
       onOpenHistory={() => setIsHistoryOpen(true)}
       onOpenCustomTest={() => setIsCustomOpen(true)}
       onClickLogo={handleNextTest}
-      scrollable={status === "finished" || (isMobile && !isMobileDismissed)}
+      scrollable={status === "finished"}
     >
-      {isMobile && !isMobileDismissed ? (
-        <div className="flex-1 flex items-center justify-center p-6 select-none animate-fadeIn">
-          <div className="w-full max-w-md bg-clackr-bg border border-clackr-muted/15 rounded-2xl p-6 md:p-8 flex flex-col items-center text-center gap-5 shadow-xl">
-            <div className="p-4 rounded-full bg-clackr-accent/15 text-clackr-accent animate-bounce">
-              <KeyIcon className="w-8 h-8" />
-            </div>
-            
-            <div className="flex flex-col gap-1.5">
-              <h2 className="font-mono text-lg font-bold text-clackr-fg">Keyboard Required</h2>
-              <span className="font-mono text-[9px] text-clackr-accent uppercase tracking-widest font-semibold">
-                desktop experience recommended
-              </span>
-            </div>
-
-            <p className="font-sans text-xs text-clackr-fg/80 leading-relaxed">
-              Clackr is a premium tactile typing rhythm experience optimized for physical mechanical keyboards. Virtual mobile keyboards do not support full keycodes, rapid speed inputs, or layout configurations.
-            </p>
-
-            <div className="flex flex-col gap-2.5 w-full mt-2">
-              <div className="p-3 bg-clackr-fg/[0.03] border border-clackr-muted/10 rounded-xl">
-                <span className="font-mono text-[10px] text-clackr-muted uppercase font-semibold">
-                  To start clacking:
-                </span>
-                <p className="font-sans text-[11px] text-clackr-fg/60 mt-1">
-                  Open this application on a desktop computer or laptop.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setIsMobileDismissed(true)}
-                className="font-mono text-[10px] text-clackr-muted hover:text-clackr-fg transition-all uppercase tracking-wider underline mt-2"
-              >
-                Continue to layout anyway
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : status === "finished" ? (
+      {status === "finished" ? (
         <ResultsPanel
           onRestart={handleRestart}
           onNextTest={handleNextTest}

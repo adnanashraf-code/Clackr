@@ -74,9 +74,9 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
   }, [activeTheme, prevTheme]);
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col max-w-none w-full mx-auto px-3 md:px-6 lg:px-8 font-sans">
+    <div className="min-h-[100dvh] h-[100dvh] overflow-hidden flex flex-col max-w-none w-full mx-auto px-2 sm:px-4 md:px-6 lg:px-8 font-sans">
       {/* Header */}
-      <header className="flex flex-row justify-between items-center py-3 md:py-6 gap-x-2 md:gap-x-4 border-b border-clackr-muted/5 relative select-none w-full">
+      <header className="flex flex-row justify-between items-center py-2.5 md:py-6 gap-x-2 md:gap-x-4 border-b border-clackr-muted/5 relative select-none w-full">
         
         {/* Left Side: Flat Logo */}
         <div 

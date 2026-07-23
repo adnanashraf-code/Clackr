@@ -27,9 +27,18 @@ export default function Key({
   const pxWidth = Math.round(width * sizeConfig.keyWidthMult - sizeConfig.keyGap);
   const pxHeight = sizeConfig.height;
 
+  const handleTouchStart = () => {
+    if (typeof window !== "undefined" && "vibrate" in navigator) {
+      try {
+        navigator.vibrate(8);
+      } catch (e) {}
+    }
+  };
+
   return (
     <div className="keycap-container" style={{ width: `${pxWidth}px` }}>
       <div
+        onTouchStart={handleTouchStart}
         className={`keycap w-full flex flex-col items-center justify-center select-none ${
           isEsc
             ? "keycap-esc"
@@ -37,7 +46,7 @@ export default function Key({
             ? `keycap-modifier ${sizeConfig.fontSizeModifier}`
             : "text-clackr-fg"
         } ${highlighted ? "highlighted font-bold" : ""} ${pressed ? "pressed" : ""}`}
-        style={{ height: `${pxHeight}px` }}
+        style={{ height: `${pxHeight}px`, touchAction: "manipulation" }}
       >
         {subLabel && (
           <span className={`leading-none opacity-60 mb-0.5 font-sans ${sizeConfig.fontSizeSub}`}>
