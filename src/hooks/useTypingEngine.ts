@@ -109,6 +109,9 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
     }
 
     const currentStatus = statusRef.current;
+    if (currentStatus === "finished") {
+      return;
+    }
     
     // Start test on first key press - only if it is a typing key (space, backspace, or character)
     const isTypingKey = e.key === " " || e.key === "Backspace" || e.key.length === 1;
@@ -149,6 +152,10 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
 
   // Input Change Handler for Mobile Soft Keyboards (Gboard / Samsung / iOS Keyboard)
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (statusRef.current === "finished") {
+      return;
+    }
+
     const newValue = e.target.value;
     const prevValue = typedInputRef.current;
 
@@ -181,12 +188,6 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
         playKeystrokeSound(true, "Backspace");
       }
     }
-  };
-
-  return {
-    handleReset,
-    handleKeyDown,
-    handleInputChange,
   };
 
   // Timer & WPM History tracker Interval
@@ -240,7 +241,7 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
       );
 
       const finalWpm = calculateWpm(correct, timeTakenInSeconds);
-      const finalRaw = calculateRawWpm(totalKeystrokes, timeTakenInSeconds);
+      const finalRaw = calculateRawWpm(totalKeystrokesRef.current, timeTakenInSeconds);
       const finalAccuracy = calculateAccuracy(correctKeystrokes, totalKeystrokes);
       const finalConsistency = calculateConsistency(wpmHistory);
 
@@ -270,5 +271,6 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
   return {
     handleReset,
     handleKeyDown,
+    handleInputChange,
   };
 }
