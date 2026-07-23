@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Keyboard, Settings, History, Menu, Clock } from "lucide-react";
+import { Keyboard, Settings, History, Menu, Clock, Volume2, VolumeX } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { toggleKeyboard } from "@/store/settingsSlice";
+import { toggleKeyboard, toggleSound } from "@/store/settingsSlice";
 import {
   togglePunctuation,
   toggleNumbers,
@@ -27,7 +27,7 @@ interface LayoutProps {
 
 export default function Layout({ children, onOpenSettings, onOpenHistory, onOpenCustomTest, onClickLogo, scrollable = false }: LayoutProps) {
   const dispatch = useDispatch();
-  const { keyboardEnabled } = useSelector((state: RootState) => state.settings);
+  const { keyboardEnabled, soundEnabled } = useSelector((state: RootState) => state.settings);
   const { highScore } = useSelector((state: RootState) => state.results);
   const { status, mode, duration, wordCount, difficulty, punctuation, numbers, capitals } = useSelector(
     (state: RootState) => state.test
@@ -74,9 +74,9 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
   }, [activeTheme, prevTheme]);
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col max-w-none w-full mx-auto px-4 md:px-12 lg:px-16 font-sans">
+    <div className="h-screen overflow-hidden flex flex-col max-w-none w-full mx-auto px-3 md:px-6 lg:px-8 font-sans">
       {/* Header */}
-      <header className="flex flex-row justify-between items-center py-3 md:py-6 gap-x-4 border-b border-clackr-muted/5 relative select-none w-full">
+      <header className="flex flex-row justify-between items-center py-3 md:py-6 gap-x-2 md:gap-x-4 border-b border-clackr-muted/5 relative select-none w-full">
         
         {/* Left Side: Flat Logo */}
         <div 
@@ -91,7 +91,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
         </div>
 
         {/* Center: Configuration Options or Results Dashboard Header (Hidden on mobile, center flex-1 on desktop) */}
-        <div className="hidden md:flex md:flex-1 justify-center w-full overflow-hidden">
+        <div className="hidden md:flex md:flex-1 justify-center min-w-0">
           {status !== "finished" ? (
             <TestConfig onOpenCustomTest={onOpenCustomTest} />
           ) : (
@@ -262,6 +262,25 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
                   >
                     <Keyboard className="w-3.5 h-3.5 text-clackr-accent" />
                     <span>{keyboardEnabled ? "Hide Keyboard" : "Show Keyboard"}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      dispatch(toggleSound());
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded hover:bg-clackr-fg/5 text-left text-clackr-muted hover:text-clackr-fg transition-all"
+                  >
+                    {soundEnabled ? (
+                      <>
+                        <Volume2 className="w-3.5 h-3.5 text-clackr-accent" />
+                        <span>Mute Sound</span>
+                      </>
+                    ) : (
+                      <>
+                        <VolumeX className="w-3.5 h-3.5 text-clackr-muted/50" />
+                        <span>Unmute Sound</span>
+                      </>
+                    )}
                   </button>
                   <button
                     onClick={() => {

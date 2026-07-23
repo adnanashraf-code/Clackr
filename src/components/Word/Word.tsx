@@ -33,7 +33,7 @@ const Word = memo(function Word({ index }: WordProps) {
       if (isCharCorrect) {
         charClass = "text-clackr-correct font-medium";
       } else {
-        charClass = "text-clackr-error border-b border-clackr-error font-medium";
+        charClass = "text-clackr-error font-bold border-b-2 border-clackr-error bg-clackr-error/15 rounded-[2px] px-[0.5px]";
       }
     }
 
@@ -58,7 +58,7 @@ const Word = memo(function Word({ index }: WordProps) {
           id={isActive && i === typed.length ? "active-char" : undefined} 
           className="relative"
         >
-          <span className="text-clackr-error opacity-60 border-b border-clackr-error font-medium bg-clackr-error/10">
+          <span className="text-clackr-error font-bold border-b-2 border-clackr-error bg-clackr-error/25 rounded-[2px] px-[1px]">
             {typed[i]}
           </span>
         </span>
@@ -72,7 +72,7 @@ const Word = memo(function Word({ index }: WordProps) {
         isActive 
           ? "" 
           : hasErrors 
-            ? "border-b border-dashed border-clackr-error/40 bg-clackr-error/5"
+            ? "border-b-2 border-clackr-error/80 bg-clackr-error/10"
             : ""
       }`}
     >

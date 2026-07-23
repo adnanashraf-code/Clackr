@@ -6,10 +6,10 @@
   /* Carbon Theme (Default) - Mechanical Warm Graphite & Cream */
   --bg-color: #211F1C;
   --fg-color: #F0E9DC;
-  --fg-muted: #8E8678;       /* High-contrast warm graphite for settings & icons */
-  --untyped: #605B51;        /* Dimmed warm graphite specifically for untyped letters */
+  --fg-muted: #A0988A;       /* High-contrast warm graphite for settings & icons */
+  --untyped: #8A8274;        /* Legible warm graphite specifically for untyped letters */
   --correct: #F0E9DC;        /* Clean Off-White for correctly typed text */
-  --error: #D96C58;          /* Red Switch */
+  --error: #FF4757;          /* Vivid Bright Red Switch */
   --accent: #6C93D9;         /* Blue Switch Caret */
   --accent-rgb: 108, 147, 217;
   --keycap-bg: #2E2B27;
@@ -17,33 +17,33 @@
   --keycap-text: #F0E9DC;
   --modifier-bg: #1B1A18;
   --modifier-border: #0B0A09;
-  --modifier-text: #948C7C;
+  --modifier-text: #A0988A;
 }
 
 [data-theme='serika'] {
   --bg-color: #F2EBDB;       /* Warm light sand */
-  --fg-color: #323437;       /* Charcoal */
-  --fg-muted: #727068;       /* Readable charcoal-grey for settings & icons */
-  --untyped: #BDB6A6;        /* Faded light sand specifically for untyped letters */
-  --correct: #323437;        /* Clean dark charcoal for correct typed text */
-  --error: #C24C3D;
-  --accent: #E2B714;         /* Gold yellow */
-  --accent-rgb: 226, 183, 20;
+  --fg-color: #1E2022;       /* Deep charcoal */
+  --fg-muted: #504D45;       /* Crisp dark charcoal-grey for settings & icons */
+  --untyped: #6E685C;        /* Dark, crisp, high-contrast text for untyped letters */
+  --correct: #1E2022;        /* Clean dark charcoal for correct typed text */
+  --error: #D63031;          /* Vivid Deep Red */
+  --accent: #D4A70F;         /* Deep gold yellow */
+  --accent-rgb: 212, 167, 15;
   --keycap-bg: #FFFFFF;
   --keycap-border: #D2D9D4;
-  --keycap-text: #323437;
+  --keycap-text: #1E2022;
   --modifier-bg: #DCD8CB;
   --modifier-border: #C8C4B8;
-  --modifier-text: #707476;
+  --modifier-text: #484640;
 }
 
 [data-theme='nord'] {
   --bg-color: #2E3440;       /* Nord slate blue */
   --fg-color: #D8DEE9;       /* Frost snow */
-  --fg-muted: #8F9EB9;       /* Readable frost blue-grey for settings & icons */
-  --untyped: #606E88;        /* Dimmed slate blue specifically for untyped letters */
+  --fg-muted: #A3B3CE;       /* Readable frost blue-grey for settings & icons */
+  --untyped: #7A89A6;        /* Clear slate blue specifically for untyped letters */
   --correct: #D8DEE9;        /* Frost snow for correct typed text */
-  --error: #BF616A;
+  --error: #FF5252;          /* Vivid Frost Red */
   --accent: #88C0D0;         /* Polar blue */
   --accent-rgb: 136, 192, 208;
   --keycap-bg: #3B4252;
@@ -51,33 +51,33 @@
   --keycap-text: #D8DEE9;
   --modifier-bg: #242933;
   --modifier-border: #161A22;
-  --modifier-text: #7F8A9F;
+  --modifier-text: #8E9BB2;
 }
 
 [data-theme='sakura'] {
   --bg-color: #F8F0F0;       /* Soft pink */
-  --fg-color: #442F2F;       /* Deep mahogany */
-  --fg-muted: #8E7373;       /* Readable deep pink-grey for settings & icons */
-  --untyped: #D8C0C0;        /* Faded soft pink specifically for untyped letters */
-  --correct: #442F2F;        /* Deep mahogany for correct typed text */
-  --error: #D66363;
-  --accent: #D16075;         /* Cherry pink */
-  --accent-rgb: 209, 96, 117;
+  --fg-color: #261616;       /* Deep mahogany */
+  --fg-muted: #563E3E;       /* Crisp deep mahogany for settings & icons */
+  --untyped: #7A5B5B;        /* Dark, crisp, high-contrast text for untyped letters */
+  --correct: #261616;        /* Deep mahogany for correct typed text */
+  --error: #E84118;          /* Vivid Cherry Crimson */
+  --accent: #C24D63;         /* Deep cherry pink */
+  --accent-rgb: 194, 77, 99;
   --keycap-bg: #FFFFFF;
   --keycap-border: #E8D7D7;
-  --keycap-text: #442F2F;
+  --keycap-text: #261616;
   --modifier-bg: #ECDADA;
   --modifier-border: #D9C3C3;
-  --modifier-text: #8C7575;
+  --modifier-text: #563E3E;
 }
 
 [data-theme='midnight'] {
   --bg-color: #0A0D14;       /* Pitch blue-black */
   --fg-color: #D1D6E0;       /* Slate ice */
-  --fg-muted: #8C97AC;       /* Readable light slate for settings & icons */
-  --untyped: #49546A;        /* Dimmed deep space grey specifically for untyped letters */
+  --fg-muted: #9DA8BD;       /* Readable light slate for settings & icons */
+  --untyped: #606D88;        /* Dimmed deep space grey specifically for untyped letters */
   --correct: #D1D6E0;        /* Slate ice for correct typed text */
-  --error: #EC6A75;
+  --error: #FF4757;          /* Vivid Electric Neon Red */
   --accent: #A277FF;         /* Electric purple */
   --accent-rgb: 162, 119, 255;
   --keycap-bg: #141923;
@@ -85,16 +85,16 @@
   --keycap-text: #D1D6E0;
   --modifier-bg: #0F121A;
   --modifier-border: #030406;
-  --modifier-text: #677185;
+  --modifier-text: #7A859B;
 }
 
 [data-theme='monokai'] {
   --bg-color: #272822;       /* Warm grey */
   --fg-color: #F8F8F2;       /* Warm white */
-  --fg-muted: #A3A08D;       /* Readable warm grey for settings & icons */
-  --untyped: #6E6D5F;        /* Dimmed warm graphite specifically for untyped letters */
+  --fg-muted: #B8B5A3;       /* Readable warm grey for settings & icons */
+  --untyped: #8A8878;        /* Dimmed warm graphite specifically for untyped letters */
   --correct: #F8F8F2;        /* Warm white for correct typed text */
-  --error: #F92672;          /* Magenta pink */
+  --error: #FF2E88;          /* Vivid Neon Pink-Red */
   --accent: #66D9EF;         /* Neon Cyan */
   --accent-rgb: 102, 217, 239;
   --keycap-bg: #3E3D32;
@@ -102,7 +102,7 @@
   --keycap-text: #F8F8F2;
   --modifier-bg: #1C1C18;
   --modifier-border: #0F0F0D;
-  --modifier-text: #8A8875;
+  --modifier-text: #9E9C88;
 }
 
 @layer base {
