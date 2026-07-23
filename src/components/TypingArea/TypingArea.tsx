@@ -53,7 +53,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
   const liveAccuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
 
   // Bind custom typing engine hook
-  const { handleReset, handleKeyDown } = useTypingEngine(inputRef);
+  const { handleReset, handleKeyDown, handleInputChange } = useTypingEngine(inputRef);
 
   // Monitor and handle container clicks to focus hidden input
   const handleContainerClick = () => {
@@ -286,17 +286,17 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
           onClick={handleContainerClick}
           className={`relative p-2 cursor-text flex items-center justify-center w-full`}
         >
-          {/* Hidden Input field capturing keyboard */}
+          {/* Input field capturing desktop physical keys and mobile soft keyboard (Gboard / iOS) */}
           <input
             ref={inputRef}
             type="text"
             inputMode="text"
             value={typedInput}
-            onChange={() => {}} // Controlled via onKeyDown for absolute character timing
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            className="absolute opacity-0 pointer-events-none w-0 h-0 text-base"
+            className="absolute inset-0 opacity-0 cursor-text w-full h-full text-base z-20"
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"

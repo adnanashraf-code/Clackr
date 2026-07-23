@@ -147,6 +147,48 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
     }
   };
 
+  // Input Change Handler for Mobile Soft Keyboards (Gboard / Samsung / iOS Keyboard)
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    const prevValue = typedInputRef.current;
+
+    // Start test on first input
+    if (statusRef.current === "idle" && newValue.length > 0) {
+      dispatch(startTest());
+    }
+
+    if (newValue.length > prevValue.length) {
+      // New character(s) typed (e.g. Gboard autocomplete or letter insertion)
+      const addedChars = newValue.slice(prevValue.length);
+      for (const char of addedChars) {
+        const activeWord = wordsRef.current[currentWordIndexRef.current] || "";
+        if (char === " ") {
+          const isWordCorrect = prevValue === activeWord;
+          dispatch(typeChar(" "));
+          playKeystrokeSound(isWordCorrect, " ");
+        } else {
+          const expectedChar = activeWord[prevValue.length];
+          const isCorrect = char === expectedChar;
+          dispatch(typeChar(char));
+          playKeystrokeSound(isCorrect, char);
+        }
+      }
+    } else if (newValue.length < prevValue.length) {
+      // Backspace pressed on soft keyboard
+      const deleteCount = prevValue.length - newValue.length;
+      for (let i = 0; i < deleteCount; i++) {
+        dispatch(backspace());
+        playKeystrokeSound(true, "Backspace");
+      }
+    }
+  };
+
+  return {
+    handleReset,
+    handleKeyDown,
+    handleInputChange,
+  };
+
   // Timer & WPM History tracker Interval
   useEffect(() => {
     if (status !== "running" || !startTime) return;
