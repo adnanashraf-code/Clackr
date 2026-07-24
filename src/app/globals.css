@@ -9,7 +9,7 @@
   --fg-muted: #A0988A;       /* High-contrast warm graphite for settings & icons */
   --untyped: #8A8274;        /* Legible warm graphite specifically for untyped letters */
   --correct: #F0E9DC;        /* Clean Off-White for correctly typed text */
-  --error: #FF4757;          /* Vivid Bright Red Switch */
+  --error: #D63031;          /* Deep Crimson Dark Red */
   --accent: #6C93D9;         /* Blue Switch Caret */
   --accent-rgb: 108, 147, 217;
   --keycap-bg: #2E2B27;
@@ -26,7 +26,7 @@
   --fg-muted: #2E2A22;       /* Crisp dark charcoal brown for labels & icons */
   --untyped: #3B362C;        /* Very dark crisp contrast for untyped letters */
   --correct: #141516;        /* Clean deep black-charcoal for correct text */
-  --error: #D63031;          /* Vivid Deep Red */
+  --error: #7F0000;          /* Ultra Deep Dark Blood Red */
   --accent: #B88E05;         /* Crisp rich gold yellow */
   --accent-rgb: 184, 142, 5;
   --keycap-bg: #FFFFFF;
@@ -43,7 +43,7 @@
   --fg-muted: #A3B3CE;       /* Readable frost blue-grey for settings & icons */
   --untyped: #7A89A6;        /* Clear slate blue specifically for untyped letters */
   --correct: #D8DEE9;        /* Frost snow for correct typed text */
-  --error: #FF5252;          /* Vivid Frost Red */
+  --error: #BF616A;          /* Deep Nord Red */
   --accent: #88C0D0;         /* Polar blue */
   --accent-rgb: 136, 192, 208;
   --keycap-bg: #3B4252;
@@ -60,7 +60,7 @@
   --fg-muted: #331F1F;       /* Crisp dark mahogany for settings & icons */
   --untyped: #422929;        /* Very dark crisp contrast for untyped letters */
   --correct: #1A0D0D;        /* Clean deep mahogany for correct text */
-  --error: #E84118;          /* Vivid Cherry Crimson */
+  --error: #7F0000;          /* Ultra Deep Dark Blood Red */
   --accent: #B03A50;         /* Rich deep cherry pink */
   --accent-rgb: 176, 58, 80;
   --keycap-bg: #FFFFFF;
