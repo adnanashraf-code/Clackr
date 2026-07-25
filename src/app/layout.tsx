@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "clackr — Typing Speed Test",
     description: "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
-    url: "https://clackr-plum.vercel.app",
+    url: "https://clackr-plum.vercel.app/",
     siteName: "clackr",
     images: [
       {
