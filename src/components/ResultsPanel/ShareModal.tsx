@@ -235,13 +235,25 @@ export default function ShareModal({
     toast.success("Results score card downloaded!");
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     const testDurationText = mode === "time" ? `${duration} sec` : `${timeTaken.toFixed(0)}s`;
-    const text = `Just hit ${finalWpm} WPM with ${accuracy}% accuracy in a ${testDurationText} test.\n\nThink you can beat me? Try clackr, a minimal distraction-free typing test.\n\nhttps://clackr-plum.vercel.app/?v=1`;
+    const text = `Just hit ${finalWpm} WPM with ${accuracy}% accuracy in a ${testDurationText} test.\n\nThink you can beat me? Try clackr, a minimal distraction-free typing test.\n\nhttps://clackr-plum.vercel.app/`;
+
+    try {
+      const response = await fetch("/og.png");
+      const blob = await response.blob();
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        toast.success("Opening X (Twitter)! Press Ctrl+V in draft box if you want to attach image.");
+      }
+    } catch (err) {
+      toast.success("Opening X (Twitter) to post!");
+    }
 
     const twitterUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
     window.open(twitterUrl, "_blank", "noopener,noreferrer");
-    toast.success("Opening X (Twitter) to post!");
   };
 
   return (
