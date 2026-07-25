@@ -83,6 +83,25 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fontSans.variable} ${fontMono.variable}`} suppressHydrationWarning>
       <head>
+        <meta property="og:title" content="clackr — Typing Speed Test" />
+        <meta property="og:description" content="Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test." />
+        <meta property="og:url" content="https://clackr-plum.vercel.app/" />
+        <meta property="og:site_name" content="clackr" />
+        <meta property="og:image" content="https://clackr-plum.vercel.app/og.png" />
+        <meta property="og:image:secure_url" content="https://clackr-plum.vercel.app/og.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@clackr" />
+        <meta name="twitter:creator" content="@clackr" />
+        <meta name="twitter:title" content="clackr — Typing Speed Test" />
+        <meta name="twitter:description" content="Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test." />
+        <meta name="twitter:image" content="https://clackr-plum.vercel.app/og.png" />
+        <meta name="twitter:image:src" content="https://clackr-plum.vercel.app/og.png" />
+        <meta name="twitter:domain" content="clackr-plum.vercel.app" />
+        <link rel="canonical" href="https://clackr-plum.vercel.app/" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-clackr-accent/20" suppressHydrationWarning>
