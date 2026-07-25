@@ -110,128 +110,138 @@ export default function ShareModal({
     }
   };
 
-  const handleDownload = () => {
-    // Dynamically draw on canvas for a crisp PNG download
-    const canvas = document.createElement("canvas");
-    canvas.width = 800;
-    canvas.height = 450;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Fetch theme colors dynamically
-    const style = window.getComputedStyle(document.documentElement);
-    const bgColor = style.getPropertyValue("--bg-color").trim() || "#211F1C";
-    const fgColor = style.getPropertyValue("--fg-color").trim() || "#F0E9DC";
-    const accentColor = style.getPropertyValue("--accent").trim() || "#6C93D9";
-    const mutedColor = style.getPropertyValue("--fg-muted").trim() || "#948C7C";
-
-    // 1. Draw Background
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // 2. Draw Header
-    ctx.font = "bold 24px monospace";
-    ctx.fillStyle = accentColor;
-    ctx.fillText("clackr", 50, 60);
-
-    ctx.font = "14px monospace";
-    ctx.fillStyle = mutedColor;
-    const dateText = `${formattedDate} | clackr.theshiva.xyz`;
-    ctx.fillText(dateText, canvas.width - ctx.measureText(dateText).width - 50, 58);
-
-    // 3. Draw Left Large Metrics
-    // WPM
-    ctx.font = "14px monospace";
-    ctx.fillStyle = mutedColor;
-    ctx.fillText("WPM", 50, 130);
-    ctx.font = "bold 72px monospace";
-    ctx.fillStyle = accentColor;
-    ctx.fillText(String(finalWpm), 50, 195);
-
-    // Accuracy
-    ctx.font = "14px monospace";
-    ctx.fillStyle = mutedColor;
-    ctx.fillText("Accuracy", 50, 240);
-    ctx.font = "bold 36px monospace";
-    ctx.fillStyle = fgColor;
-    ctx.fillText(`${accuracy}%`, 50, 280);
-
-    // PB / Test Type
-    ctx.font = "14px monospace";
-    ctx.fillStyle = mutedColor;
-    ctx.fillText("Test Type", 50, 325);
-    ctx.font = "bold 20px monospace";
-    ctx.fillStyle = accentColor;
-    const testTypeText = `${mode} ${mode === "time" ? duration : mode === "words" ? wordCount : ""}`.toUpperCase();
-    ctx.fillText(testTypeText, 50, 350);
-
-    // 4. Draw Simplified Chart on Right
-    const chartX = 350;
-    const chartY = 120;
-    const chartW = 400;
-    const chartH = 220;
-
-    // Draw chart boundary lines (axes)
-    ctx.strokeStyle = "rgba(148, 140, 124, 0.1)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(chartX, chartY + chartH);
-    ctx.lineTo(chartX + chartW, chartY + chartH);
-    ctx.stroke();
-
-    // Plot WPM path
-    if (chartData && chartData.length > 0) {
-      const maxVal = Math.max(...chartData.map((d) => Math.max(d.wpm || 0, d.rawWpm || 0)), 40);
-      const points = chartData.map((d, i) => {
-        const x = chartX + (i / (chartData.length - 1 || 1)) * chartW;
-        const y = chartY + chartH - ((d.wpm || 0) / maxVal) * chartH;
-        return { x, y };
-      });
-
-      // Draw line
-      ctx.strokeStyle = accentColor;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
+  const generateCanvasBlob = (): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 800;
+      canvas.height = 450;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(null);
+        return;
       }
+
+      // Fetch theme colors dynamically
+      const style = window.getComputedStyle(document.documentElement);
+      const bgColor = style.getPropertyValue("--bg-color").trim() || "#211F1C";
+      const fgColor = style.getPropertyValue("--fg-color").trim() || "#F0E9DC";
+      const accentColor = style.getPropertyValue("--accent").trim() || "#6C93D9";
+      const mutedColor = style.getPropertyValue("--fg-muted").trim() || "#948C7C";
+
+      // 1. Draw Background
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 2. Draw Header
+      ctx.font = "bold 24px monospace";
+      ctx.fillStyle = accentColor;
+      ctx.fillText("clackr", 50, 60);
+
+      ctx.font = "14px monospace";
+      ctx.fillStyle = mutedColor;
+      const dateText = `${formattedDate} | clackr-plum.vercel.app`;
+      ctx.fillText(dateText, canvas.width - ctx.measureText(dateText).width - 50, 58);
+
+      // 3. Draw Left Large Metrics
+      ctx.font = "14px monospace";
+      ctx.fillStyle = mutedColor;
+      ctx.fillText("WPM", 50, 130);
+      ctx.font = "bold 72px monospace";
+      ctx.fillStyle = accentColor;
+      ctx.fillText(String(finalWpm), 50, 195);
+
+      // Accuracy
+      ctx.font = "14px monospace";
+      ctx.fillStyle = mutedColor;
+      ctx.fillText("Accuracy", 50, 240);
+      ctx.font = "bold 36px monospace";
+      ctx.fillStyle = fgColor;
+      ctx.fillText(`${accuracy}%`, 50, 280);
+
+      // PB / Test Type
+      ctx.font = "14px monospace";
+      ctx.fillStyle = mutedColor;
+      ctx.fillText("Test Type", 50, 325);
+      ctx.font = "bold 20px monospace";
+      ctx.fillStyle = accentColor;
+      const testTypeText = `${mode} ${mode === "time" ? duration : mode === "words" ? wordCount : ""}`.toUpperCase();
+      ctx.fillText(testTypeText, 50, 350);
+
+      // 4. Draw Simplified Chart on Right
+      const chartX = 350;
+      const chartY = 120;
+      const chartW = 400;
+      const chartH = 220;
+
+      ctx.strokeStyle = "rgba(148, 140, 124, 0.1)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(chartX, chartY + chartH);
+      ctx.lineTo(chartX + chartW, chartY + chartH);
       ctx.stroke();
 
-      // Draw dots
-      ctx.fillStyle = accentColor;
-      points.forEach((p) => {
+      if (chartData && chartData.length > 0) {
+        const maxVal = Math.max(...chartData.map((d) => Math.max(d.wpm || 0, d.rawWpm || 0)), 40);
+        const points = chartData.map((d, i) => {
+          const x = chartX + (i / (chartData.length - 1 || 1)) * chartW;
+          const y = chartY + chartH - ((d.wpm || 0) / maxVal) * chartH;
+          return { x, y };
+        });
+
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    }
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.stroke();
 
-    // 5. Draw Bottom Stats
-    ctx.font = "12px monospace";
-    ctx.fillStyle = mutedColor;
-    ctx.fillText("RAW", 50, 405);
-    ctx.fillText("CONSISTENCY", 150, 405);
-    ctx.fillText("TIME", 300, 405);
-    ctx.fillText("FIXES", 420, 405);
+        ctx.fillStyle = accentColor;
+        points.forEach((p) => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
 
-    ctx.font = "bold 16px monospace";
-    ctx.fillStyle = fgColor;
-    ctx.fillText(String(finalRaw), 50, 425);
-    ctx.fillText(`${consistency}%`, 150, 425);
-    ctx.fillText(`${timeTaken.toFixed(0)}s`, 300, 425);
-    ctx.fillText(String(backspaceCount), 420, 425);
+      // 5. Draw Bottom Stats
+      ctx.font = "12px monospace";
+      ctx.fillStyle = mutedColor;
+      ctx.fillText("RAW", 50, 405);
+      ctx.fillText("CONSISTENCY", 150, 405);
+      ctx.fillText("TIME", 300, 405);
+      ctx.fillText("FIXES", 420, 405);
 
-    // 6. Trigger Download
-    const dataUrl = canvas.toDataURL("image/png");
+      ctx.font = "bold 16px monospace";
+      ctx.fillStyle = fgColor;
+      ctx.fillText(String(finalRaw), 50, 425);
+      ctx.fillText(`${consistency}%`, 150, 425);
+      ctx.fillText(`${timeTaken.toFixed(0)}s`, 300, 425);
+      ctx.fillText(String(backspaceCount), 420, 425);
+
+      canvas.toBlob((blob) => resolve(blob), "image/png");
+    });
+  };
+
+  const handleDownload = async () => {
+    const blob = await generateCanvasBlob();
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.download = `clackr-${finalWpm}wpm.png`;
-    link.href = dataUrl;
+    link.href = url;
     link.click();
+    toast.success("Results score card downloaded!");
   };
 
   const handlePost = () => {
-    toast.info("Simulated share: Results shared to social media feed!");
+    const testDurationText = mode === "time" ? `${duration} sec` : `${timeTaken.toFixed(0)}s`;
+    const text = `Just hit ${finalWpm} WPM with ${accuracy}% accuracy in a ${testDurationText} test.\n\nThink you can beat me? Try clackr, a minimal distraction-free typing test.\n\nhttps://clackr-plum.vercel.app/`;
+
+    const twitterUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
+    window.open(twitterUrl, "_blank", "noopener,noreferrer");
+    toast.success("Opening X (Twitter) to post!");
   };
 
   return (

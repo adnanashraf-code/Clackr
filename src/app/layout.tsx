@@ -24,8 +24,31 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Clackr — Premium Mechanical Typing rhythm & speed test",
-  description: "Improve your typing speed and rhythm with Clackr. Features customizable mechanical switch sounds, compact 75% interactive virtual keyboard, and detailed analytics.",
+  title: "clackr — Typing Speed Test",
+  description: "Minimalist, distraction-free typing speed test with authentic mechanical switch sounds and detailed analytics.",
+  metadataBase: new URL("https://clackr-plum.vercel.app"),
+  openGraph: {
+    title: "clackr — Typing Speed Test",
+    description: "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+    url: "https://clackr-plum.vercel.app",
+    siteName: "clackr",
+    images: [
+      {
+        url: "https://clackr-plum.vercel.app/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "clackr — Typing Speed Test",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "clackr — Typing Speed Test",
+    description: "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+    images: ["https://clackr-plum.vercel.app/og-image.png"],
+  },
 };
 
 const themeScript = `
