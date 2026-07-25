@@ -237,7 +237,7 @@ export default function ShareModal({
 
   const handlePost = () => {
     const testDurationText = mode === "time" ? `${duration} sec` : `${timeTaken.toFixed(0)}s`;
-    const text = `Just hit ${finalWpm} WPM with ${accuracy}% accuracy in a ${testDurationText} test.\n\nThink you can beat me? Try clackr, a minimal distraction-free typing test.\n\nhttps://clackr-plum.vercel.app/`;
+    const text = `Just hit ${finalWpm} WPM with ${accuracy}% accuracy in a ${testDurationText} test.\n\nThink you can beat me? Try clackr, a minimal distraction-free typing test.\n\nhttps://clackr-plum.vercel.app/?v=1`;
 
     const twitterUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
     window.open(twitterUrl, "_blank", "noopener,noreferrer");
