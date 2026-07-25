@@ -228,45 +228,12 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
     return () => clearInterval(interval);
   }, [status, startTime, mode, duration, dispatch]);
 
-  // Test finished log submission
+  // Trigger confetti animation when test finishes
   useEffect(() => {
-    if (status === "finished" && startTime && endTime) {
-      const timeTakenInSeconds = (endTime - startTime) / 1000;
-      
-      const { correct, incorrect, extra, missed } = getCharStats(
-        words,
-        typedWords,
-        typedInput,
-        currentWordIndex
-      );
-
-      const finalWpm = calculateWpm(correct, timeTakenInSeconds);
-      const finalRaw = calculateRawWpm(totalKeystrokesRef.current, timeTakenInSeconds);
-      const finalAccuracy = calculateAccuracy(correctKeystrokes, totalKeystrokes);
-      const finalConsistency = calculateConsistency(wpmHistory);
-
-      let configSummary = "";
-      if (mode === "time") configSummary = `${duration}s`;
-      else if (mode === "words") configSummary = `${wordCount} words`;
-      else configSummary = mode;
-
-      dispatch(
-        addResult({
-          wpm: finalWpm,
-          rawWpm: finalRaw,
-          accuracy: finalAccuracy,
-          consistency: finalConsistency,
-          mode,
-          configSummary,
-        })
-      );
-
-      // Trigger confetti animation if enabled
-      if (confettiEnabled) {
-        triggerConfetti();
-      }
+    if (status === "finished" && confettiEnabled) {
+      triggerConfetti();
     }
-  }, [status, startTime, endTime, dispatch, confettiEnabled]);
+  }, [status, confettiEnabled]);
 
   return {
     handleReset,

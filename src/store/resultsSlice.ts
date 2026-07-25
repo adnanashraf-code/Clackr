@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, current } from "@reduxjs/toolkit";
 
 export interface TestResultSummary {
   id: string;
@@ -30,21 +30,45 @@ const resultsSlice = createSlice({
       state.highScore = action.payload.highScore;
     },
     addResult(state, action: PayloadAction<Omit<TestResultSummary, "id" | "timestamp">>) {
+      const now = Date.now();
+
+      // Deduplication check: ignore if an identical test result was saved in the last 3 seconds
+      const lastResult = state.history[0];
+      if (
+        lastResult &&
+        lastResult.wpm === action.payload.wpm &&
+        lastResult.rawWpm === action.payload.rawWpm &&
+        lastResult.accuracy === action.payload.accuracy &&
+        lastResult.mode === action.payload.mode &&
+        now - lastResult.timestamp < 3000
+      ) {
+        return;
+      }
+
       const newResult: TestResultSummary = {
         ...action.payload,
         id: Math.random().toString(36).substring(2, 9),
-        timestamp: Date.now(),
+        timestamp: now,
       };
       state.history.unshift(newResult); // newest first
       if (newResult.wpm > state.highScore) {
         state.highScore = newResult.wpm;
       }
-      // Limit history to last 50 tests to prevent localstorage bloat
-      if (state.history.length > 50) {
-        state.history = state.history.slice(0, 50);
+      // Limit history to last 100 tests to prevent localstorage bloat
+      if (state.history.length > 100) {
+        state.history = state.history.slice(0, 100);
       }
       if (typeof window !== "undefined") {
-        localStorage.setItem("clackr-results", JSON.stringify(state));
+        try {
+          const plainState = current(state);
+          const dataToSave = {
+            history: plainState.history,
+            highScore: plainState.highScore,
+          };
+          localStorage.setItem("clackr-results", JSON.stringify(dataToSave));
+        } catch (e) {
+          console.error("Failed to save results to localStorage:", e);
+        }
       }
     },
     loadResults(state) {
@@ -53,11 +77,15 @@ const resultsSlice = createSlice({
           const saved = localStorage.getItem("clackr-results");
           if (saved) {
             const parsed = JSON.parse(saved) as Partial<ResultsState>;
-            if (parsed.history) state.history = parsed.history;
-            if (parsed.highScore !== undefined) state.highScore = parsed.highScore;
+            if (parsed && Array.isArray(parsed.history)) {
+              state.history = parsed.history;
+            }
+            if (parsed && typeof parsed.highScore === "number") {
+              state.highScore = parsed.highScore;
+            }
           }
         } catch (e) {
-          console.error("Failed to load results:", e);
+          console.error("Failed to load results from localStorage:", e);
         }
       }
     },
@@ -65,7 +93,11 @@ const resultsSlice = createSlice({
       state.history = [];
       state.highScore = 0;
       if (typeof window !== "undefined") {
-        localStorage.removeItem("clackr-results");
+        try {
+          localStorage.removeItem("clackr-results");
+        } catch (e) {
+          console.error("Failed to clear results from localStorage:", e);
+        }
       }
     },
   },

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
+import { addResult } from "@/store/resultsSlice";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { 
   RefreshCw, 
@@ -27,6 +28,7 @@ interface ResultsPanelProps {
 }
 
 export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProps) {
+  const dispatch = useDispatch();
   const {
     words,
     typedWords,
@@ -68,8 +70,30 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
     .map((w, i) => (i < typedWords.length && typedWords[i] !== w ? w : null))
     .filter((w): w is string => w !== null);
 
-  // Auto-save wrong words to all-time practice list on mount
+  const hasSavedResultRef = React.useRef(false);
+
+  // Auto-save test result to history and wrong words on mount
   useEffect(() => {
+    if (hasSavedResultRef.current) return;
+    hasSavedResultRef.current = true;
+
+    let configSummary = "";
+    if (mode === "time") configSummary = `${duration}s`;
+    else if (mode === "words") configSummary = `${wordCount} words`;
+    else configSummary = mode;
+
+    dispatch(
+      addResult({
+        wpm: finalWpm,
+        rawWpm: finalRaw,
+        accuracy,
+        consistency,
+        mode,
+        configSummary,
+      })
+    );
+
+    // Save wrong words
     if (thisTestWrongWords.length > 0 && typeof window !== "undefined") {
       const saved = localStorage.getItem("clackr_practice_words");
       let allTime: string[] = [];
@@ -80,7 +104,6 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
           console.error(e);
         }
       }
-      // Merge, deduplicate, and limit to 100 words
       const merged = Array.from(new Set([...allTime, ...thisTestWrongWords])).slice(0, 100);
       localStorage.setItem("clackr_practice_words", JSON.stringify(merged));
     }

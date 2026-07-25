@@ -107,13 +107,6 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
 
         {/* Right Side: Grouped Toolbar Controls */}
         <div className="flex items-center justify-end gap-2.5 relative">
-          {highScore > 0 && (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-clackr-fg/5 text-[9px] font-mono text-clackr-fg font-semibold uppercase tracking-wider select-none">
-              <span className="text-clackr-muted font-bold">pb:</span>
-              <span className="text-clackr-accent font-bold">{highScore}</span>
-            </div>
-          )}
-
           {/* Desktop Toolbar (Hidden on Mobile) */}
           <div className="hidden md:flex items-center gap-0.5 bg-clackr-fg/[0.03] border border-clackr-muted/10 p-1 rounded-xl shadow-sm">
             <button

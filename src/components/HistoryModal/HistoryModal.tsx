@@ -3,7 +3,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
-import { clearHistory } from "@/store/resultsSlice";
+import { clearHistory, loadResults } from "@/store/resultsSlice";
 import { X, Award, BarChart, Trash2 } from "lucide-react";
 
 interface HistoryModalProps {
@@ -18,6 +18,9 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
 
   React.useEffect(() => {
     if (!isOpen) return;
+
+    // Refresh history directly from localStorage on open
+    dispatch(loadResults());
 
     if (modalRef.current) {
       const focusable = modalRef.current.querySelectorAll<HTMLElement>(
