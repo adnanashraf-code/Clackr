@@ -32,6 +32,14 @@ export const metadata: Metadata = {
     description: "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
     url: "https://clackr-plum.vercel.app",
     siteName: "clackr",
+    images: [
+      {
+        url: "https://clackr-plum.vercel.app/twitter-image.png",
+        width: 1200,
+        height: 630,
+        alt: "clackr — Typing Speed Test",
+      },
+    ],
     locale: "en_US",
     type: "website",
   },
@@ -39,6 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "clackr — Typing Speed Test",
     description: "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+    images: ["https://clackr-plum.vercel.app/twitter-image.png"],
   },
 };
 
