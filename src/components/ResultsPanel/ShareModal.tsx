@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { X, Copy, Download, Share2 } from "lucide-react";
+import { X, Copy, Download, Share2, Check, Trophy } from "lucide-react";
+import { useToast } from "@/components/Toast/ToastContext";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
 
 interface ShareModalProps {
@@ -37,6 +38,7 @@ export default function ShareModal({
   isNewHighScore,
   highScore,
 }: ShareModalProps) {
+  const toast = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -101,9 +103,10 @@ export default function ShareModal({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareText);
-      alert("Results copied to clipboard!");
+      toast.success("Results copied to clipboard!");
     } catch (err) {
       console.error("Failed to copy text: ", err);
+      toast.error("Failed to copy results.");
     }
   };
 
@@ -228,7 +231,7 @@ export default function ShareModal({
   };
 
   const handlePost = () => {
-    alert("Simulated share: Results shared to social media feed!");
+    toast.info("Simulated share: Results shared to social media feed!");
   };
 
   return (

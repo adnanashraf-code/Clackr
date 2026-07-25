@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Keyboard, Settings, History, Menu, Clock, Volume2, VolumeX } from "lucide-react";
+import { Keyboard, Settings, History, Menu, Clock, Volume2, VolumeX, Palette } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { toggleKeyboard, toggleSound } from "@/store/settingsSlice";
+import { toggleKeyboard, toggleSound, setTheme, SettingsState } from "@/store/settingsSlice";
 import {
   togglePunctuation,
   toggleNumbers,
@@ -141,11 +141,79 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
             </button>
           </div>
 
-          {/* Mobile Hamburger Button (Visible on Mobile only) */}
+          {/* Mobile Quick Action Buttons (Separate Individual Boxes: Theme -> Time -> Sound -> Menu) */}
+
+          {/* 1. Theme Button Box */}
+          <button
+            onClick={(e) => {
+              const themes: Array<SettingsState["theme"]> = ["midnight", "carbon", "serika", "nord", "sakura", "monokai"];
+              const currentIdx = themes.indexOf(activeTheme);
+              const nextTheme = themes[(currentIdx + 1) % themes.length];
+
+              const rect = e.currentTarget.getBoundingClientRect();
+              const x = rect.left + rect.width / 2;
+              const y = rect.top + rect.height / 2;
+              document.documentElement.style.setProperty("--click-x", `${x}px`);
+              document.documentElement.style.setProperty("--click-y", `${y}px`);
+
+              const hasSVT = typeof document !== "undefined" && (document as any).startViewTransition;
+              if (hasSVT) {
+                (document as any).startViewTransition(() => {
+                  dispatch(setTheme(nextTheme));
+                });
+              } else {
+                dispatch(setTheme(nextTheme));
+              }
+            }}
+            title={`Theme: ${activeTheme}`}
+            aria-label="Cycle theme"
+            className="md:hidden p-2 rounded-xl bg-clackr-fg/[0.03] border border-clackr-muted/10 text-clackr-muted hover:text-clackr-fg transition-all shadow-sm active:scale-95"
+          >
+            <Palette className="w-4 h-4 text-clackr-accent" />
+          </button>
+
+          {/* 2. Time Selector Button Box */}
+          <button
+            onClick={() => {
+              if (mode !== "time") {
+                dispatch(setMode("time"));
+                dispatch(setDuration(30));
+              } else {
+                const durations = [15, 30, 60, 120];
+                const nextIdx = (durations.indexOf(duration) + 1) % durations.length;
+                dispatch(setDuration(durations[nextIdx]));
+              }
+            }}
+            title={`Time Limit: ${mode === "time" ? `${duration}s` : "30s"}`}
+            aria-label="Change time limit"
+            className="md:hidden p-2 rounded-xl bg-clackr-fg/[0.03] border border-clackr-muted/10 text-clackr-muted hover:text-clackr-fg transition-all shadow-sm active:scale-95"
+          >
+            <Clock className="w-4 h-4 text-clackr-accent" />
+          </button>
+
+          {/* 3. Sound Toggle Button Box */}
+          <button
+            onClick={() => dispatch(toggleSound())}
+            title={soundEnabled ? "Mute Sound" : "Enable Sound"}
+            aria-label="Toggle sound"
+            className={`md:hidden p-2 rounded-xl border transition-all shadow-sm active:scale-95 ${
+              soundEnabled 
+                ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10" 
+                : "text-clackr-muted border-clackr-muted/10 bg-clackr-fg/[0.03] hover:text-clackr-fg"
+            }`}
+          >
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+          </button>
+
+          {/* 4. Hamburger Menu Button Box */}
           <button
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label="Toggle navigation menu"
-            className="md:hidden p-1.5 rounded-xl bg-clackr-fg/[0.03] border border-clackr-muted/10 text-clackr-muted hover:text-clackr-fg transition-all duration-200"
+            className={`md:hidden p-2 rounded-xl border transition-all shadow-sm active:scale-95 ${
+              isMenuOpen
+                ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10"
+                : "text-clackr-muted border-clackr-muted/10 bg-clackr-fg/[0.03] hover:text-clackr-fg"
+            }`}
           >
             <Menu className="w-4 h-4" />
           </button>
@@ -246,35 +314,6 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
               <div className="flex flex-col gap-1">
                 <span className="text-clackr-accent uppercase tracking-wider text-[8px] font-bold">navigation</span>
                 <div className="flex flex-col gap-0.5 mt-1">
-                  <button
-                    onClick={() => {
-                      dispatch(toggleKeyboard());
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded hover:bg-clackr-fg/5 text-left text-clackr-muted hover:text-clackr-fg transition-all"
-                  >
-                    <Keyboard className="w-3.5 h-3.5 text-clackr-accent" />
-                    <span>{keyboardEnabled ? "Hide Keyboard" : "Show Keyboard"}</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      dispatch(toggleSound());
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2.5 w-full px-2 py-1.5 rounded hover:bg-clackr-fg/5 text-left text-clackr-muted hover:text-clackr-fg transition-all"
-                  >
-                    {soundEnabled ? (
-                      <>
-                        <Volume2 className="w-3.5 h-3.5 text-clackr-accent" />
-                        <span>Mute Sound</span>
-                      </>
-                    ) : (
-                      <>
-                        <VolumeX className="w-3.5 h-3.5 text-clackr-muted/50" />
-                        <span>Unmute Sound</span>
-                      </>
-                    )}
-                  </button>
                   <button
                     onClick={() => {
                       onOpenHistory();

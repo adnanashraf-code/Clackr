@@ -7,6 +7,8 @@ import { loadSettings } from "./settingsSlice";
 import { loadResults } from "./resultsSlice";
 import { soundManager } from "../lib/soundManager";
 
+import { ToastProvider } from "@/components/Toast/ToastContext";
+
 interface ProviderProps {
   children: React.ReactNode;
 }
@@ -65,5 +67,9 @@ export function ReduxProvider({ children }: ProviderProps) {
     };
   }, []);
 
-  return <Provider store={store}>{children}</Provider>;
+  return (
+    <Provider store={store}>
+      <ToastProvider>{children}</ToastProvider>
+    </Provider>
+  );
 }

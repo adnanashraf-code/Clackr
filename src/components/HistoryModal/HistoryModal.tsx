@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { clearHistory, loadResults } from "@/store/resultsSlice";
 import { X, Award, BarChart, Trash2 } from "lucide-react";
+import { useToast } from "@/components/Toast/ToastContext";
 
 interface HistoryModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface HistoryModalProps {
 
 export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
   const dispatch = useDispatch();
+  const toast = useToast();
   const { history, highScore } = useSelector((state: RootState) => state.results);
   const modalRef = React.useRef<HTMLDivElement>(null);
 
@@ -179,9 +181,15 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
           <div className="p-4 border-t border-clackr-muted/10 flex justify-end">
             <button
               onClick={() => {
-                if (confirm("Clear all logs and reset your PB?")) {
-                  dispatch(clearHistory());
-                }
+                toast.confirm({
+                  title: "Reset Records Database",
+                  message: "Are you sure you want to clear all history logs and reset your Personal Best WPM record?",
+                  confirmText: "Yes, Reset All",
+                  onConfirm: () => {
+                    dispatch(clearHistory());
+                    toast.success("History database wiped successfully.");
+                  },
+                });
               }}
               className="px-3 py-1.5 rounded hover:bg-clackr-error/15 text-clackr-error font-mono text-[11px] font-semibold flex items-center gap-1.5 border border-clackr-error/10 hover:border-clackr-error/30 transition-all"
             >

@@ -16,6 +16,8 @@ import {
 import { clearHistory } from "@/store/resultsSlice";
 import { X, Volume2, Eye, Trash2, Check } from "lucide-react";
 
+import { useToast } from "@/components/Toast/ToastContext";
+
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,6 +25,7 @@ interface SettingsModalProps {
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const dispatch = useDispatch();
+  const toast = useToast();
   const settings = useSelector((state: RootState) => state.settings);
   const modalRef = React.useRef<HTMLDivElement>(null);
   
@@ -357,10 +360,15 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <span>Wipe Personal Best & History</span>
               <button
                 onClick={() => {
-                  if (confirm("Are you sure you want to clear all high scores and typing history?")) {
-                    dispatch(clearHistory());
-                    alert("History cleared successfully.");
-                  }
+                  toast.confirm({
+                    title: "Wipe Personal Best & History",
+                    message: "Are you sure you want to clear all high scores and typing history? This action cannot be undone.",
+                    confirmText: "Yes, Clear History",
+                    onConfirm: () => {
+                      dispatch(clearHistory());
+                      toast.success("History cleared successfully.");
+                    },
+                  });
                 }}
                 className="px-3 py-1.5 rounded bg-clackr-error/10 hover:bg-clackr-error text-clackr-error hover:text-white border border-clackr-error/20 transition-all font-semibold flex items-center gap-1"
               >

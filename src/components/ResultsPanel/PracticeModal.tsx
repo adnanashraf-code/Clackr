@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, Play, RotateCcw } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { initTest, setMode, setWordCount } from "@/store/testSlice";
+import { useToast } from "@/components/Toast/ToastContext";
 
 interface PracticeModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface PracticeModalProps {
 
 export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: PracticeModalProps) {
   const dispatch = useDispatch();
+  const toast = useToast();
   const [source, setSource] = useState<"this" | "allTime">("this");
   const [allTimeWrongWords, setAllTimeWrongWords] = useState<string[]>([]);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -85,19 +87,24 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
 
   const handleReset = () => {
     if (source === "this") {
-      // For this test, just clear local state array (prop is read-only)
-      alert("Cannot reset current test results. Switch to 'all-time' to reset cumulative history.");
+      toast.info("Cannot reset current test results. Switch to 'all-time' to reset cumulative history.");
     } else {
-      if (confirm("Are you sure you want to clear your all-time practice words history?")) {
-        localStorage.removeItem("clackr_practice_words");
-        setAllTimeWrongWords([]);
-      }
+      toast.confirm({
+        title: "Clear Practice Words",
+        message: "Are you sure you want to clear your all-time practice words history?",
+        confirmText: "Yes, Clear Words",
+        onConfirm: () => {
+          localStorage.removeItem("clackr_practice_words");
+          setAllTimeWrongWords([]);
+          toast.success("Practice words history cleared.");
+        },
+      });
     }
   };
 
   const handleStart = () => {
     if (currentWords.length === 0) {
-      alert("No words to practice!");
+      toast.warning("No words to practice!");
       return;
     }
 
