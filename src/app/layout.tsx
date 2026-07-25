@@ -25,7 +25,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "clackr — Typing Speed Test",
-  description: "Minimalist, distraction-free typing speed test with authentic mechanical switch sounds and detailed analytics.",
+  description: "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
   metadataBase: new URL("https://clackr-plum.vercel.app"),
   openGraph: {
     title: "clackr — Typing Speed Test",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     siteName: "clackr",
     images: [
       {
-        url: "https://clackr-plum.vercel.app/twitter-image.png",
+        url: "https://clackr-plum.vercel.app/og.png",
         width: 1200,
         height: 630,
         alt: "clackr — Typing Speed Test",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "clackr — Typing Speed Test",
     description: "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
-    images: ["https://clackr-plum.vercel.app/twitter-image.png"],
+    images: ["https://clackr-plum.vercel.app/og.png"],
   },
 };
 
