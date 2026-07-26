@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 const BASE_URL = "https://clackr-plum.vercel.app";
@@ -54,13 +55,63 @@ export async function generateMetadata({
   };
 }
 
-export default async function SharePage({ searchParams }: SharePageProps) {
-  const params = await searchParams;
-  // If someone opens this URL in a browser (not a bot), redirect to homepage
-  const queryString = new URLSearchParams(
-    params as Record<string, string>
-  ).toString();
+/**
+ * Detects social media crawlers/bots via User-Agent header.
+ * Bots receive the rendered HTML (with OG meta tags from generateMetadata).
+ * Human visitors get redirected to the main app.
+ */
+function isCrawlerBot(userAgent: string): boolean {
+  const botPatterns = [
+    "Twitterbot",
+    "facebookexternalhit",
+    "LinkedInBot",
+    "Slackbot",
+    "TelegramBot",
+    "WhatsApp",
+    "Discordbot",
+    "Googlebot",
+    "bingbot",
+    "Applebot",
+  ];
+  return botPatterns.some((bot) =>
+    userAgent.toLowerCase().includes(bot.toLowerCase())
+  );
+}
 
-  // Redirect human visitors to the main app
-  redirect(`/${queryString ? `?${queryString}` : ""}`);
+export default async function SharePage({ searchParams }: SharePageProps) {
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent") || "";
+
+  // Bots get a minimal page — the important part is the OG meta tags
+  // served by generateMetadata() above
+  if (isCrawlerBot(userAgent)) {
+    const params = await searchParams;
+    const wpm = params.wpm || "0";
+    const acc = params.acc || "0";
+
+    return (
+      <main
+        style={{
+          backgroundColor: "#1a1a1e",
+          color: "#e8e6e3",
+          fontFamily: "monospace",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <h1>{wpm} WPM · {acc}% Accuracy</h1>
+          <p>clackr — Typing Speed Test</p>
+          <a href={BASE_URL} style={{ color: "#6C93D9" }}>
+            Try clackr
+          </a>
+        </div>
+      </main>
+    );
+  }
+
+  // Human visitors get redirected to the main app
+  redirect("/");
 }

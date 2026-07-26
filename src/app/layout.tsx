@@ -25,7 +25,33 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "clackr — Typing Speed Test",
-  description: "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+  description:
+    "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+  metadataBase: new URL("https://clackr-plum.vercel.app"),
+  openGraph: {
+    title: "clackr — Typing Speed Test",
+    description:
+      "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+    url: "https://clackr-plum.vercel.app/",
+    siteName: "clackr",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "clackr — Typing Speed Test",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "clackr — Typing Speed Test",
+    description:
+      "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+    images: ["/og.png"],
+  },
 };
 
 const themeScript = `
@@ -52,19 +78,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fontSans.variable} ${fontMono.variable}`} suppressHydrationWarning>
       <head>
-        <meta property="og:title" content="clackr — Typing Speed Test" />
-        <meta property="og:description" content="Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test." />
-        <meta property="og:url" content="https://clackr-plum.vercel.app/" />
-        <meta property="og:site_name" content="clackr" />
-        <meta property="og:image" content="https://clackr-plum.vercel.app/og.png" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:type" content="image/png" />
-        <meta property="og:type" content="website" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="clackr — Typing Speed Test" />
-        <meta name="twitter:description" content="Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test." />
-        <meta name="twitter:image" content="https://clackr-plum.vercel.app/og.png" />
         <link rel="canonical" href="https://clackr-plum.vercel.app/" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
