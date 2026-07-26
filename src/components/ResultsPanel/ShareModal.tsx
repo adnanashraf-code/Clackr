@@ -236,13 +236,25 @@ export default function ShareModal({
   };
 
   /**
-   * Opens Twitter/X post composer with pre-filled test result statistics
-   * and the official clackr product URL target for social card rendering.
+   * Opens Twitter/X post composer with a personalized share URL.
+   * The /share page serves dynamic OG meta tags so Twitter's bot
+   * generates a unique result card image for each shared score.
    */
   const handlePost = () => {
     const testDurationText = mode === "time" ? `${duration} sec` : `${timeTaken.toFixed(0)}s`;
     const tweetText = `Just hit ${finalWpm} WPM with ${accuracy}% accuracy in a ${testDurationText} test.\n\nThink you can beat me? Try clackr, a minimal distraction-free typing test.`;
-    const shareUrl = "https://clackr-plum.vercel.app/";
+
+    const shareParams = new URLSearchParams({
+      wpm: String(finalWpm),
+      acc: String(accuracy),
+      raw: String(finalRaw),
+      con: String(consistency),
+      mode,
+      dur: String(mode === "time" ? duration : wordCount),
+      time: String(Math.round(timeTaken)),
+      fixes: String(backspaceCount),
+    });
+    const shareUrl = `https://clackr-plum.vercel.app/share?${shareParams.toString()}`;
 
     const twitterUrl = `https://x.com/intent/post?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(twitterUrl, "_blank", "noopener,noreferrer");
