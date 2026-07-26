@@ -4,56 +4,40 @@ import { redirect } from "next/navigation";
 
 const BASE_URL = "https://clackr-plum.vercel.app";
 
-interface SharePageProps {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}
-
-export async function generateMetadata({
-  searchParams,
-}: SharePageProps): Promise<Metadata> {
-  const params = await searchParams;
-  const wpm = params.wpm || "0";
-  const acc = params.acc || "0";
-  const raw = params.raw || "0";
-  const con = params.con || "0";
-  const mode = params.mode || "time";
-  const dur = params.dur || "30";
-  const time = params.time || dur;
-  const fixes = params.fixes || "0";
-
-  const testLabel = mode === "time" ? `${dur}s` : `${dur} words`;
-  const title = `${wpm} WPM · ${acc}% Accuracy — clackr`;
-  const description = `I just scored ${wpm} WPM with ${acc}% accuracy on a ${testLabel} typing test. Think you can beat me?`;
-
-  const ogImageUrl = `${BASE_URL}/og.png`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      url: `${BASE_URL}/share`,
-      siteName: "clackr",
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-          type: "image/png",
-          alt: `clackr result: ${wpm} WPM`,
-        },
-      ],
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [ogImageUrl],
-    },
-  };
-}
+/**
+ * Static metadata for the /share route.
+ * Always uses og.png as the social card image.
+ * Twitter/social crawlers see this metadata, human visitors get redirected to homepage.
+ */
+export const metadata: Metadata = {
+  title: "clackr — Typing Speed Test",
+  description:
+    "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+  openGraph: {
+    title: "clackr — Typing Speed Test",
+    description:
+      "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+    url: `${BASE_URL}/share`,
+    siteName: "clackr",
+    images: [
+      {
+        url: `${BASE_URL}/og.png`,
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "clackr — Typing Speed Test",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "clackr — Typing Speed Test",
+    description:
+      "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
+    images: [`${BASE_URL}/og.png`],
+  },
+};
 
 function isCrawlerBot(userAgent: string): boolean {
   const botPatterns = [
@@ -73,15 +57,12 @@ function isCrawlerBot(userAgent: string): boolean {
   );
 }
 
-export default async function SharePage({ searchParams }: SharePageProps) {
+export default async function SharePage() {
   const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "";
 
+  // Bots get a minimal page — the OG meta tags in metadata above are the important part
   if (isCrawlerBot(userAgent)) {
-    const params = await searchParams;
-    const wpm = params.wpm || "0";
-    const acc = params.acc || "0";
-
     return (
       <main
         style={{
@@ -95,8 +76,8 @@ export default async function SharePage({ searchParams }: SharePageProps) {
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <h1>{wpm} WPM · {acc}% Accuracy</h1>
-          <p>clackr — Typing Speed Test</p>
+          <h1>clackr — Typing Speed Test</h1>
+          <p>A minimal distraction-free typing test.</p>
           <a href={BASE_URL} style={{ color: "#6C93D9" }}>
             Try clackr
           </a>
@@ -105,5 +86,6 @@ export default async function SharePage({ searchParams }: SharePageProps) {
     );
   }
 
+  // Human visitors get redirected to the main app
   redirect("/");
 }
