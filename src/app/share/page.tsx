@@ -25,7 +25,7 @@ export async function generateMetadata({
   const title = `${wpm} WPM · ${acc}% Accuracy — clackr`;
   const description = `I just scored ${wpm} WPM with ${acc}% accuracy on a ${testLabel} typing test. Think you can beat me?`;
 
-  const ogImageUrl = `${BASE_URL}/api/og?wpm=${wpm}&acc=${acc}&raw=${raw}&con=${con}&mode=${mode}&dur=${dur}&time=${time}&fixes=${fixes}`;
+  const ogImageUrl = `${BASE_URL}/og.png`;
 
   return {
     title,
