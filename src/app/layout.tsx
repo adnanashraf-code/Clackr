@@ -128,6 +128,9 @@ export const metadata: Metadata = {
     shortcut: "/icon.png",
     apple: "/icon.png",
   },
+  verification: {
+    google: "google11e86a920a740421",
+  },
   manifest: "/manifest.json",
 };
 
