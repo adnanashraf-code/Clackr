@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: "clackr",
     images: [
       {
-        url: `${BASE_URL}/og.png`,
+        url: `${BASE_URL}/og.png?v=2`,
         width: 1200,
         height: 630,
         type: "image/png",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: "clackr — Typing Speed Test",
     description:
       "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
-    images: [`${BASE_URL}/og.png`],
+    images: [`${BASE_URL}/og.png?v=2`],
   },
 };
 
