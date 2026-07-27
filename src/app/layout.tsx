@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     siteName: "clackr",
     images: [
       {
-        url: "/og.png?v=2",
+        url: "https://clackr-plum.vercel.app/og.png?v=2",
         width: 1200,
         height: 630,
         type: "image/png",
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     title: "clackr — Typing Speed Test",
     description:
       "Think you can beat my typing speed? Try clackr, a minimal distraction-free typing test.",
-    images: ["/og.png?v=2"],
+    images: ["https://clackr-plum.vercel.app/og.png?v=2"],
   },
 };
 
