@@ -1,131 +1,140 @@
-# Clackr ⌨️
+# clackr ⌨️ — Minimal Distraction-Free Typing Speed Test
 
-Clackr is a premium, high-fidelity typing test application designed for mechanical keyboard enthusiasts and speed typists. Built with **Next.js 15**, **Redux Toolkit**, and **Tailwind CSS**, it features a fully-interactive 75% mechanical virtual keyboard, live audio feedback, rich visual analytics, and a fully customizable typing experience.
+<div align="center">
+
+  <img src="public/og.png" alt="clackr Typing Test Preview" width="800" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" />
+
+  <br/><br/>
+
+  [![Next.js 15](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+  [![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-2.0-764ABC?style=for-the-badge&logo=redux&logoColor=white)](https://redux-toolkit.js.org/)
+  [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+
+  <br/>
+
+  ### 🌐 [Live Demo: clackr-plum.vercel.app](https://clackr-plum.vercel.app)
+
+</div>
+
+---
+
+## 🌟 Overview
+
+**clackr** is a state-of-the-art, distraction-free typing speed test application designed for speed typists, developers, and mechanical keyboard enthusiasts. Built with **Next.js 15**, **TypeScript**, **Redux Toolkit**, and **Tailwind CSS**, it features a fully-interactive 75% mechanical virtual keyboard, Web Audio API mechanical key sounds, real-time WPM & accuracy analytics, customizable test modes, and 6 curated themes.
 
 ---
 
 ## ✨ Features
 
-### 1. Core Typing Engine
-* **Multiple Test Modes**:
-  * `Time`: Standard timed tests (15s, 30s, 60s, 120s).
-  * `Words`: Target word counts (10, 25, 50, 100).
-  * `Quotes`: Practice with real-world quotes of varying lengths.
-  * `Zen`: Free typing without timer constraints.
-  * `Code`: Code syntax typing practice with code snippets.
-* **Modifiers**: Easily toggle **Punctuation**, **Numbers**, and **Capitals** into the word pool.
-* **Three Difficulty Tiers**: 
-  * `Easy`: Focuses on common English words.
-  * `Medium`: Blended pool consisting of 75% easy words and 25% hard words.
-  * `Hard`: Complex, longer, and rare vocabulary words.
+### 1. ⚡ Core Typing Engine
+* **5 Test Modes**:
+  * `Time`: Standard timed speed tests (`15s`, `30s`, `60s`, `120s`).
+  * `Words`: Target word count challenges (`10`, `25`, `50`, `100` words).
+  * `Quotes`: Real-world quotes practice across varying lengths.
+  * `Zen`: Free-form practice mode without timer or word limits.
+  * `Code`: Code syntax practice featuring real programming snippets.
+* **Modifiers**: Toggle **Punctuation**, **Numbers**, and **Capitals** into any word pool.
+* **Difficulty Levels**:
+  * `Easy`: Common English vocabulary.
+  * `Hard`: Advanced, complex, and rare vocabulary words.
 * **Custom Test Setup**:
-  * Easily launch custom practice sessions via the **Clock icon** shortcut in the sub-navbar.
-  * Configure custom durations using convenient minute presets (`1m`, `2m`, `3m`, `5m`, `10m`, `15m`, `20m`) or specify exact second inputs ranging from `5s` up to `3600s` (1 hour).
+  * Launch custom minute/second tests up to `3600s` (1 hour) via the toolbar.
 
-### 2. Interactive 75% Mechanical Keyboard
-* **Dynamic Key Highlights**: Real-time visual feedback showing pressed keycaps and targeted letters.
-* **3D Tactile Keycaps**: Beautifully styled keycaps with simulated depth, margins, and smooth hover states.
-* **Adaptive Scaling**: Resize the keyboard to fit your preference (`Normal`, `Compact`, or `Wide`).
+### 2. ⌨️ Interactive 75% Mechanical Virtual Keyboard
+* **Dynamic Key Lighting**: Real-time visual feedback showing target and pressed keycaps.
+* **3D Tactile Keycaps**: Custom rendered keycaps with simulated mechanical depth and smooth animations.
+* **Layout Scaling**: Toggle between `Normal`, `Compact`, and `Wide` keyboard sizes.
 
-### 3. Sound & Animations
-* **Web Audio API Sound Engine**: High-performance audio synthesizer and buffer system with distinct sound profiles:
-  * `Clack`: Tap of mechanical key switches.
-  * `Bubble`: Soft pop sound.
-  * `None`: Silent mode.
-* **Audio Latency Optimization**: Mechanical sound playback is set to an ultra-low `3ms` scheduling buffer (warmed on the first user interaction) to guarantee perfect visual-audio sync.
-* **Double Sound Filter**: Input fields (like text and number boxes) and button click listeners are filtered globally to ensure clicks and keystrokes play exactly one clean sound transient.
-* **Interactive Restart Spin**: The restart/refresh button under the words triggers a snappy, counter-clockwise `360-degree` spring rotation animation when clicked.
-* **Confetti Celebration**: Smooth canvas-based confetti explosion upon completing a typing test.
+### 3. 🔊 Audio Feedback & Sound Engine
+* **Web Audio API Synthesizer**: Low-latency mechanical key sounds with zero audio lag (`<3ms` scheduling buffer).
+* **Multiple Sound Profiles**: Choose between `Clack` (mechanical switch), `Bubble` (soft pop), or `None` (silent).
+* **Visual Polish**: Spring-animated restart button and canvas confetti celebration on test completion.
 
-### 4. Advanced Analytics & History
-* **Live Graphing**: Recharts-powered performance curve graphing both WPM and Raw WPM second-by-second.
-* **Personal Bests (PB)**: Tracks and stores high scores and history logs (capped at 50 results) in local storage.
-* **Word Review**: In-depth analysis highlighting which words were correctly typed, missed, or mistyped.
-* **Practice Weak Words**: Launch practice sessions specifically composed of words you mistyped during the test.
-* **Custom Share Cards**: Export beautiful screenshot cards directly as PNG downloads to share your achievements.
+### 4. 📊 Performance Analytics & Practice
+* **Interactive Charts**: Recharts-powered WPM and Raw WPM second-by-second performance curves.
+* **Personal Bests (PB)**: History logging with local storage persistence.
+* **Word Review & Practice**: Review missed words and launch instant practice sessions targeting mistyped words.
+* **Social Share Cards**: Custom 1200x630 OpenGraph card generation for sharing on Twitter/X, Discord, and LinkedIn.
 
-### 5. Multi-Theme Engine & Live Stats
-* **Global Visitor Counter**: Embedded directly in the settings modal header. Fetches visitor session metrics in real-time from the public **Abacus API** (`abacus.jasoncameron.dev`). Features a pulsing live green status indicator and a local cache fallback (`localStorage`) to guarantee stable numbers without console pollution if offline or blocked.
-* **6 Pre-configured Themes** with smooth CSS variable transitions:
-  1. **Carbon (Default)**: Mechanical warm graphite & cream.
-  2. **Serika**: Warm light sand, dark charcoal, and gold yellow.
-  3. **Nord**: Cool slate blue, frost snow, and polar blue.
-  4. **Sakura**: Soft cherry pink and deep mahogany.
-  5. **Midnight**: Pitch space blue-black and electric purple.
-  6. **Monokai**: Classic neon hacker grey, magenta, and cyan.
+### 5. 🎨 Multi-Theme System
+Includes 6 curated color themes:
+* 🌑 **Midnight** (Default space blue & electric purple)
+* ⚙️ **Carbon** (Graphite & warm cream)
+* 💛 **Serika** (Warm sand & gold)
+* ❄️ **Nord** (Cool polar slate)
+* 🌸 **Sakura** (Cherry pink & mahogany)
+* ⚡ **Monokai** (Neon hacker grey & magenta)
 
 ---
 
-## 📂 Project Structure
+## ⌨️ Keyboard Shortcuts
 
-```bash
+| Shortcut | Action |
+|---|---|
+| `Tab` | Quick restart test / Generate new word pool |
+| `Esc` | Toggle Settings Modal (when not actively typing) |
+| `K` | Toggle Virtual Keyboard visibility |
+
+---
+
+## 📁 Project Architecture
+
+```
 Typing Master/
-├── public/                 # Static assets (favicons, mechanical audio preloads)
+├── public/                 # Static assets, OG cards, favicons & audio files
 ├── src/
-│   ├── app/                # Next.js App Router (Layouts, pages, styles)
-│   │   ├── globals.css     # CSS Variables for all 6 themes & animation keyframes
-│   │   └── page.tsx        # App Orchestrator & Global Event Listeners
-│   ├── components/         # Reusable UI Components
-│   │   ├── CustomTestModal # Modular configuration cards for custom minutes/seconds runs
-│   │   ├── HistoryModal    # High Score, History Log, and Statistics Modals
-│   │   ├── Layout          # Layout Shell (Header, Navigation, Footer, Toolbar)
-│   │   ├── ResultsPanel    # Results screen, charts, Share and Practice modals
-│   │   ├── SettingsModal   # User customizations (Themes, Sounds, Layout, Live Visitor Counter)
-│   │   ├── TestConfig      # Interactive test configuration sub-navbar toolbar
-│   │   ├── TypingArea      # Core caret tracking, active word pool rendering
-│   │   ├── VirtualKeyboard # 75% mechanical interactive virtual keyboard
-│   │   └── Word            # Dynamic word & character styling
-│   ├── hooks/              # Custom React Hooks
-│   │   └── useTypingEngine # Centralized typing logic, keypress hooks, and timers
-│   ├── lib/                # Utility Functions and Engines
-│   │   ├── confetti.ts     # Canvas confetti trigger module
-│   │   ├── soundManager.ts # Web Audio API engine & mechanical OGG loaders
-│   │   ├── statsCalculator.ts # WPM, Accuracy, and Consistency math helpers
-│   │   ├── wordGenerator.ts  # Dynamic word pool generator based on modifiers & difficulty
-│   │   └── wordLists.ts    # Easy/Hard word lists, Quotes, and Code pools
-│   └── store/              # Redux State Management
-│       ├── provider.tsx    # Settings hydration & global sound-click listeners
-│       ├── store.ts        # Redux store setup
-│       ├── settingsSlice.ts# User preferences store (local storage synchronized)
-│       ├── resultsSlice.ts # History & High-scores store (local storage synchronized)
-│       └── testSlice.ts    # Active test metrics, timers, and custom test settings
-├── next.config.js          # Next.js custom configurations
-├── tailwind.config.js      # Custom theme token mapping
-└── tsconfig.json           # TypeScript configuration with `@/*` mapping
+│   ├── app/                # Next.js App Router (Layouts, Pages, Routes, SEO Metadata)
+│   │   ├── api/og/         # OpenGraph dynamic route
+│   │   ├── share/          # Share landing page with smooth auto-redirect
+│   │   ├── globals.css     # CSS Variables for all 6 themes
+│   │   ├── layout.tsx      # Root Layout with JSON-LD SEO Schemas & Metadata
+│   │   ├── manifest.ts     # Web Application Manifest (PWA)
+│   │   ├── robots.ts       # Search Engine Crawling Rules
+│   │   └── sitemap.ts      # Dynamic XML Sitemap
+│   ├── components/         # Reusable Modular Components
+│   │   ├── CustomTestModal # Custom duration modal
+│   │   ├── HistoryModal    # High scores & statistics modal
+│   │   ├── Layout          # Application shell & header navigation
+│   │   ├── ResultsPanel    # Results screen, charts, Share & Practice modals
+│   │   ├── SettingsModal   # Theme switcher, sound settings & live visitor counter
+│   │   ├── TestConfig      # Test configuration sub-navbar toolbar
+│   │   ├── TypingArea      # Core typing caret tracking engine
+│   │   └── VirtualKeyboard # Interactive 75% mechanical keyboard
+│   ├── hooks/              # Custom React Hooks (useTypingEngine)
+│   ├── lib/                # Audio engines, stats math, word generators & confetti
+│   └── store/              # Redux Toolkit State Management
+├── next.config.js          # Next.js optimization config
+└── tailwind.config.js      # Custom theme token mapping
 ```
 
 ---
 
 ## 🛠️ Getting Started
 
-To run Clackr locally on your machine, follow these steps:
-
-### 1. Install Dependencies
-Make sure you have Node.js installed. In the root directory, run:
+### 1. Clone & Install Dependencies
 ```bash
+git clone https://github.com/adnanashraf-code/Clackr.git
+cd Clackr
 npm install
 ```
 
-### 2. Start the Development Server
-Run the local dev server:
+### 2. Run Development Server
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) (or the alternative port reported in the terminal) in your browser to view the application.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### 3. Build for Production
-To create a production-optimized build of the project:
 ```bash
 npm run build
-```
-Start the production server:
-```bash
 npm start
 ```
 
 ---
 
-## 👤 Creator
+## 👤 Author
 
 <div align="center">
   <br/>
@@ -133,13 +142,13 @@ npm start
     <img src="https://github.com/adnanashraf-code.png" width="90" style="border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" alt="Adnan Ashraf" />
   </a>
   <h3><b>Adnan Ashraf</b></h3>
-  <p>MERN Stack Developer & Creative Engineer</p>
+  <p>Full Stack Engineer & Creative Web Developer</p>
 
   <a href="https://github.com/adnanashraf-code" target="_blank">
     <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Badge" />
   </a>
 
   <br/><br/>
-  <p>Focuses on building high-performance, premium, and visually stunning web applications. ❤️</p>
-  <p>Feel free to explore my other repositories or star this project if you like it! 🌟</p>
+  <p>Crafting high-performance, distraction-free, and visually stunning web experiences. ❤️</p>
+  <p>Star this repository if you find it helpful! 🌟</p>
 </div>
