@@ -1,0 +1,16 @@
+{
+  "name": "clackr — Typing Speed Test",
+  "short_name": "clackr",
+  "description": "Minimal, distraction-free typing speed test with real-time WPM analytics and mechanical keyboard sounds.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08090d",
+  "theme_color": "#08090d",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
