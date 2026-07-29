@@ -34,6 +34,11 @@ const THEMES: Array<SettingsState["theme"]> = [
   "monokai",
 ];
 
+const PRESET_DURATIONS_LIST = [15, 30, 60, 120];
+const PRESET_WORDS_LIST = [10, 25, 50, 100];
+const MODES_LIST = ["time", "words", "quote", "zen", "code"] as const;
+const DIFFICULTIES_LIST = ["easy", "hard"] as const;
+
 export default function Layout({
   children,
   onOpenSettings,
@@ -138,7 +143,7 @@ export default function Layout({
           </span>
         </div>
 
-        {/* Center: Configuration Options or Results Dashboard Header (Hidden on mobile, center flex-1 on desktop) */}
+        {/* Center: Configuration Options or Results Dashboard Header */}
         <div className="hidden md:flex md:flex-1 justify-center min-w-0">
           {status !== "finished" ? (
             <TestConfig onOpenCustomTest={onOpenCustomTest} />
@@ -156,12 +161,13 @@ export default function Layout({
         {/* Right Side: Grouped Toolbar Controls */}
         <div className="flex items-center justify-end gap-2.5 relative">
           {/* Desktop Toolbar (Hidden on Mobile) */}
-          <div className="hidden md:flex items-center gap-0.5 bg-clackr-fg/[0.03] border border-clackr-muted/10 p-1 rounded-xl shadow-sm">
+          <div className="hidden md:flex items-center gap-0.5 bg-clackr-fg/[0.03] border border-clackr-muted/10 p-1 rounded-xl shadow-sm" role="toolbar" aria-label="Quick actions toolbar">
             <button
               type="button"
               onClick={() => dispatch(toggleKeyboard())}
               title="Toggle Keyboard View (K)"
               aria-label="Toggle keyboard view"
+              aria-pressed={keyboardEnabled}
               className={`p-1.5 rounded-lg transition-all ${
                 keyboardEnabled 
                   ? "text-clackr-accent bg-clackr-accent/10 hover:bg-clackr-accent/20" 
@@ -231,9 +237,8 @@ export default function Layout({
                 dispatch(setMode("time"));
                 dispatch(setDuration(30));
               } else {
-                const durations = [15, 30, 60, 120];
-                const nextIdx = (durations.indexOf(duration) + 1) % durations.length;
-                dispatch(setDuration(durations[nextIdx]));
+                const nextIdx = (PRESET_DURATIONS_LIST.indexOf(duration) + 1) % PRESET_DURATIONS_LIST.length;
+                dispatch(setDuration(PRESET_DURATIONS_LIST[nextIdx]));
               }
             }}
             title={`Time Limit: ${mode === "time" ? `${duration}s` : "30s"}`}
@@ -249,6 +254,7 @@ export default function Layout({
             onClick={() => dispatch(toggleSound())}
             title={soundEnabled ? "Mute Sound" : "Enable Sound"}
             aria-label="Toggle sound"
+            aria-pressed={soundEnabled}
             className={`md:hidden p-2 rounded-xl border transition-all shadow-sm active:scale-95 ${
               soundEnabled 
                 ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10" 
@@ -285,9 +291,10 @@ export default function Layout({
               {/* Modifiers */}
               <div className="flex flex-col gap-1 border-b border-clackr-muted/10 pb-2.5">
                 <span className="text-clackr-accent uppercase tracking-wider text-[8px] font-bold">modifiers</span>
-                <div className="flex flex-wrap gap-1 mt-1">
+                <div className="flex flex-wrap gap-1 mt-1" role="toolbar" aria-label="Text modifiers">
                   <button
                     type="button"
+                    aria-pressed={punctuation}
                     onClick={() => dispatch(togglePunctuation())}
                     className={`px-2 py-0.5 rounded border text-[9px] ${punctuation ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                   >
@@ -295,6 +302,7 @@ export default function Layout({
                   </button>
                   <button
                     type="button"
+                    aria-pressed={numbers}
                     onClick={() => dispatch(toggleNumbers())}
                     className={`px-2 py-0.5 rounded border text-[9px] ${numbers ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                   >
@@ -302,6 +310,7 @@ export default function Layout({
                   </button>
                   <button
                     type="button"
+                    aria-pressed={capitals}
                     onClick={() => dispatch(toggleCapitals())}
                     className={`px-2 py-0.5 rounded border text-[9px] ${capitals ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                   >
@@ -313,11 +322,12 @@ export default function Layout({
               {/* Difficulty */}
               <div className="flex flex-col gap-1 border-b border-clackr-muted/10 pb-2.5">
                 <span className="text-clackr-accent uppercase tracking-wider text-[8px] font-bold">difficulty</span>
-                <div className="flex gap-1 mt-1">
-                  {(["easy", "hard"] as const).map((diff) => (
+                <div className="flex gap-1 mt-1" role="toolbar" aria-label="Difficulty selection">
+                  {DIFFICULTIES_LIST.map((diff) => (
                     <button
                       key={diff}
                       type="button"
+                      aria-pressed={difficulty === diff}
                       onClick={() => dispatch(setDifficulty(diff))}
                       className={`flex-1 px-2 py-0.5 rounded border uppercase text-[9px] ${difficulty === diff ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                     >
@@ -330,11 +340,12 @@ export default function Layout({
               {/* Modes */}
               <div className="flex flex-col gap-1 border-b border-clackr-muted/10 pb-2.5">
                 <span className="text-clackr-accent uppercase tracking-wider text-[8px] font-bold">mode</span>
-                <div className="grid grid-cols-3 gap-1 mt-1">
-                  {(["time", "words", "quote", "zen", "code"] as const).map((m) => (
+                <div className="grid grid-cols-3 gap-1 mt-1" role="toolbar" aria-label="Mode selection">
+                  {MODES_LIST.map((m) => (
                     <button
                       key={m}
                       type="button"
+                      aria-pressed={mode === m}
                       onClick={() => dispatch(setMode(m))}
                       className={`px-2 py-0.5 rounded border uppercase text-[9px] ${mode === m ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                     >
@@ -350,12 +361,13 @@ export default function Layout({
                   <span className="text-clackr-accent uppercase tracking-wider text-[8px] font-bold">
                     {mode === "time" ? "time limit" : "word count"}
                   </span>
-                  <div className="grid grid-cols-4 gap-1 mt-1">
+                  <div className="grid grid-cols-4 gap-1 mt-1" role="toolbar" aria-label="Preset options">
                     {mode === "time" ? (
-                      [15, 30, 60, 120].map((d) => (
+                      PRESET_DURATIONS_LIST.map((d) => (
                         <button
                           key={d}
                           type="button"
+                          aria-pressed={duration === d}
                           onClick={() => dispatch(setDuration(d))}
                           className={`px-2 py-0.5 rounded border text-[9px] ${duration === d ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                         >
@@ -363,10 +375,11 @@ export default function Layout({
                         </button>
                       ))
                     ) : (
-                      [10, 25, 50, 100].map((w) => (
+                      PRESET_WORDS_LIST.map((w) => (
                         <button
                           key={w}
                           type="button"
+                          aria-pressed={wordCount === w}
                           onClick={() => dispatch(setWordCount(w))}
                           className={`px-2 py-0.5 rounded border text-[9px] ${wordCount === w ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                         >
