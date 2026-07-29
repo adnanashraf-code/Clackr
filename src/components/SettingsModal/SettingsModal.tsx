@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
@@ -30,6 +31,9 @@ const THEMES = [
   { id: "sakura" as const, name: "Sakura", bg: "#F8F0F0", accent: "#D16075", text: "#442F2F", dark: false },
   { id: "monokai" as const, name: "Monokai", bg: "#272822", accent: "#A6E22E", text: "#F8F8F2", dark: true },
 ];
+
+const SOUND_TYPES = ["clack", "mechanical", "bubble"] as const;
+const KEYBOARD_SIZES = ["small", "medium", "large"] as const;
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const dispatch = useDispatch();
@@ -98,6 +102,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
   }, [isOpen, localRuns]);
 
+  const handleWipeHistory = useCallback(() => {
+    toast.confirm({
+      title: "Wipe Personal Best & History",
+      message: "Are you sure you want to clear all high scores and typing history? This action cannot be undone.",
+      confirmText: "Yes, Clear History",
+      onConfirm: () => {
+        dispatch(clearHistory());
+        toast.success("History cleared successfully.");
+      },
+    });
+  }, [dispatch, toast]);
+
   if (!isOpen) return null;
 
   return (
@@ -145,11 +161,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-clackr-accent flex items-center gap-1.5">
               <span>●</span> Presets & Visual Theme
             </h3>
-            <div className="grid grid-cols-2 gap-3 mt-1">
+            <div className="grid grid-cols-2 gap-3 mt-1" role="toolbar" aria-label="Visual themes selection">
               {THEMES.map((theme) => (
                 <button
                   key={theme.id}
                   type="button"
+                  aria-pressed={settings.theme === theme.id}
                   onClick={(event) => {
                     const x = event.clientX;
                     const y = event.clientY;
@@ -158,7 +175,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       document.documentElement.style.setProperty("--click-y", `${y}px`);
                     }
                     if (typeof document !== "undefined" && (document as any).startViewTransition) {
-                      const { flushSync } = require("react-dom");
                       (document as any).startViewTransition(() => {
                         flushSync(() => {
                           dispatch(setTheme(theme.id));
@@ -198,11 +214,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               {/* Sound Type Selection */}
               <div className="flex items-center justify-between">
                 <span>Switch Sound Style</span>
-                <div className="flex gap-1">
-                  {(["clack", "mechanical", "bubble"] as const).map((t) => (
+                <div className="flex gap-1" role="toolbar" aria-label="Switch sound style">
+                  {SOUND_TYPES.map((t) => (
                     <button
                       key={t}
                       type="button"
+                      aria-pressed={settings.soundType === t}
                       onClick={() => dispatch(setSoundType(t))}
                       className={`px-2 py-1 rounded text-[10px] transition-all border ${
                         settings.soundType === t
@@ -221,6 +238,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <span>Play Beep on Error</span>
                 <button
                   type="button"
+                  aria-pressed={settings.errorSoundEnabled}
                   onClick={() => dispatch(toggleErrorSound())}
                   className={`px-3 py-1 rounded transition-all border ${
                     settings.errorSoundEnabled
@@ -246,6 +264,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <span>On-screen Virtual Keyboard</span>
                 <button
                   type="button"
+                  aria-pressed={settings.keyboardEnabled}
                   onClick={() => dispatch(toggleKeyboard())}
                   className={`px-3 py-1 rounded transition-all border ${
                     settings.keyboardEnabled
@@ -261,11 +280,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               {settings.keyboardEnabled && (
                 <div className="flex items-center justify-between">
                   <span>Keyboard Size</span>
-                  <div className="flex gap-1">
-                    {(["small", "medium", "large"] as const).map((sz) => (
+                  <div className="flex gap-1" role="toolbar" aria-label="Keyboard size selection">
+                    {KEYBOARD_SIZES.map((sz) => (
                       <button
                         key={sz}
                         type="button"
+                        aria-pressed={(settings.keyboardSize || "medium") === sz}
                         onClick={() => dispatch(setKeyboardSize(sz))}
                         className={`px-2 py-1 rounded text-[10px] transition-all border capitalize ${
                           (settings.keyboardSize || "medium") === sz
@@ -283,9 +303,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               {/* Font Family selection */}
               <div className="flex items-center justify-between">
                 <span>Typing Font</span>
-                <div className="flex gap-1">
+                <div className="flex gap-1" role="toolbar" aria-label="Typing font family">
                   <button
                     type="button"
+                    aria-pressed={settings.fontFamily === "font-mono"}
                     onClick={() => dispatch(setFontFamily("font-mono"))}
                     className={`px-2 py-1 rounded text-[10px] transition-all border ${
                       settings.fontFamily === "font-mono"
@@ -297,6 +318,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </button>
                   <button
                     type="button"
+                    aria-pressed={settings.fontFamily === "font-sans"}
                     onClick={() => dispatch(setFontFamily("font-sans"))}
                     className={`px-2 py-1 rounded text-[10px] transition-all border ${
                       settings.fontFamily === "font-sans"
@@ -314,6 +336,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <span>Confetti on Completion</span>
                 <button
                   type="button"
+                  aria-pressed={settings.confettiEnabled}
                   onClick={() => dispatch(toggleConfetti())}
                   className={`px-3 py-1 rounded transition-all border ${
                     settings.confettiEnabled
@@ -336,17 +359,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <span>Wipe Personal Best & History</span>
               <button
                 type="button"
-                onClick={() => {
-                  toast.confirm({
-                    title: "Wipe Personal Best & History",
-                    message: "Are you sure you want to clear all high scores and typing history? This action cannot be undone.",
-                    confirmText: "Yes, Clear History",
-                    onConfirm: () => {
-                      dispatch(clearHistory());
-                      toast.success("History cleared successfully.");
-                    },
-                  });
-                }}
+                onClick={handleWipeHistory}
                 className="px-3 py-1.5 rounded bg-clackr-error/10 hover:bg-clackr-error text-clackr-error hover:text-white border border-clackr-error/20 transition-all font-semibold flex items-center gap-1"
               >
                 <Trash2 className="w-3.5 h-3.5" />

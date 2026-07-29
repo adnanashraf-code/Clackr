@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -33,7 +33,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
   const isTyping = status === "running";
 
-  const handleToggleTheme = (e: React.MouseEvent) => {
+  const handleToggleTheme = useCallback((e: React.MouseEvent) => {
     const currentIndex = THEMES.indexOf(activeTheme);
     const nextTheme = THEMES[(currentIndex + 1) % THEMES.length];
 
@@ -48,7 +48,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
     } else {
       dispatch(setTheme(nextTheme));
     }
-  };
+  }, [activeTheme, dispatch]);
 
   return (
     <div

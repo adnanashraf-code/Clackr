@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, memo } from "react";
+import React, { useContext, useCallback, memo } from "react";
 import { SizeContext } from "./VirtualKeyboard";
 
 interface KeyProps {
@@ -28,7 +28,7 @@ function Key({
   const pxWidth = Math.round(width * sizeConfig.keyWidthMult - sizeConfig.keyGap);
   const pxHeight = sizeConfig.height;
 
-  const handleTouchStart = () => {
+  const handleTouchStart = useCallback(() => {
     if (typeof window !== "undefined" && typeof navigator !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate(8);
@@ -36,7 +36,7 @@ function Key({
         // Silent catch for unsupported browsers
       }
     }
-  };
+  }, []);
 
   return (
     <div className="keycap-container" style={{ width: `${pxWidth}px` }}>
