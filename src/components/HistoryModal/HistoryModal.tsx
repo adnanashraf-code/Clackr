@@ -39,6 +39,18 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
     });
   }, []);
 
+  const handleClearHistory = useCallback(() => {
+    toast.confirm({
+      title: "Reset Records Database",
+      message: "Are you sure you want to clear all history logs and reset your Personal Best WPM record?",
+      confirmText: "Yes, Reset All",
+      onConfirm: () => {
+        dispatch(clearHistory());
+        toast.success("History database wiped successfully.");
+      },
+    });
+  }, [dispatch, toast]);
+
   if (!isOpen) return null;
 
   return (
@@ -108,15 +120,15 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
               </div>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-clackr-muted/10">
-                <table className="w-full text-left font-mono text-xs border-collapse">
+                <table className="w-full text-left font-mono text-xs border-collapse" aria-label="Recent typing runs history table">
                   <thead>
                     <tr className="bg-clackr-fg/5 text-clackr-muted border-b border-clackr-muted/10">
-                      <th className="p-3">WPM</th>
-                      <th className="p-3">Raw</th>
-                      <th className="p-3">Accuracy</th>
-                      <th className="p-3">Consistency</th>
-                      <th className="p-3">Mode</th>
-                      <th className="p-3 text-right">Date</th>
+                      <th scope="col" className="p-3">WPM</th>
+                      <th scope="col" className="p-3">Raw</th>
+                      <th scope="col" className="p-3">Accuracy</th>
+                      <th scope="col" className="p-3">Consistency</th>
+                      <th scope="col" className="p-3">Mode</th>
+                      <th scope="col" className="p-3 text-right">Date</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-clackr-muted/5">
@@ -151,17 +163,7 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
           <div className="p-4 border-t border-clackr-muted/10 flex justify-end">
             <button
               type="button"
-              onClick={() => {
-                toast.confirm({
-                  title: "Reset Records Database",
-                  message: "Are you sure you want to clear all history logs and reset your Personal Best WPM record?",
-                  confirmText: "Yes, Reset All",
-                  onConfirm: () => {
-                    dispatch(clearHistory());
-                    toast.success("History database wiped successfully.");
-                  },
-                });
-              }}
+              onClick={handleClearHistory}
               className="px-3 py-1.5 rounded hover:bg-clackr-error/15 text-clackr-error font-mono text-[11px] font-semibold flex items-center gap-1.5 border border-clackr-error/10 hover:border-clackr-error/30 transition-all"
             >
               <Trash2 className="w-3.5 h-3.5" />
