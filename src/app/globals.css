@@ -124,11 +124,6 @@ html {
   view-transition-name: root;
 }
 
-/* Disable standard transitions/animations when view transition is running to avoid dual animation stutters */
-::view-transition {
-  navigation: auto;
-}
-
 ::view-transition-group(root) {
   animation-duration: 400ms;
 }
@@ -154,7 +149,7 @@ html {
   }
 }
 
-/* Suppress all general styles transitions when view transition active */
+/* Suppress all general styles transitions when view transition is active */
 html:active-view-transition,
 html:active-view-transition * {
   transition: none !important;
@@ -259,8 +254,6 @@ html:active-view-transition * {
   transform: translateY(3px);
   box-shadow: 0 1px 0 0 var(--accent);
 }
-
-
 
 /* Hide scrollbar utility but keep scrolling */
 .no-scrollbar::-webkit-scrollbar {
