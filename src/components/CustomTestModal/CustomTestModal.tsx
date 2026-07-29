@@ -6,11 +6,23 @@ import { RootState } from "@/store/store";
 import { setCustomTestSettings, initTest } from "@/store/testSlice";
 import { generateWords } from "@/lib/wordGenerator";
 import { X, Clock, HelpCircle, Settings2 } from "lucide-react";
+import { useModalFocusTrap } from "@/hooks/useModalFocusTrap";
 
 interface CustomTestModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const PRESET_DURATIONS = [
+  { label: "30s", value: 30 },
+  { label: "1m", value: 60 },
+  { label: "2m", value: 120 },
+  { label: "3m", value: 180 },
+  { label: "5m", value: 300 },
+  { label: "10m", value: 600 },
+  { label: "15m", value: 900 },
+  { label: "20m", value: 1200 },
+];
 
 export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProps) {
   const dispatch = useDispatch();
@@ -20,21 +32,24 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
   const testState = useSelector((state: RootState) => state.test);
 
   // Local configuration states
-  const [duration, setDuration] = useState(60);
+  const [duration, setDuration] = useState<number>(60);
   const [selectedPreset, setSelectedPreset] = useState<number | "custom">(60);
-  const [customDuration, setCustomDuration] = useState(30);
+  const [customDuration, setCustomDuration] = useState<number | "">(30);
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("easy");
-  const [punctuation, setPunctuation] = useState(false);
-  const [numbers, setNumbers] = useState(false);
-  const [capitals, setCapitals] = useState(false);
-  const [errorText, setErrorText] = useState("");
+  const [punctuation, setPunctuation] = useState<boolean>(false);
+  const [numbers, setNumbers] = useState<boolean>(false);
+  const [capitals, setCapitals] = useState<boolean>(false);
+  const [errorText, setErrorText] = useState<string>("");
 
-  // Sync state when modal is opened
+  // Use reusable focus trap and keyboard shortcut (Escape) hook
+  useModalFocusTrap(isOpen, onClose, modalRef);
+
+  // Sync state when modal is opened (only when isOpen transitions to true)
   useEffect(() => {
     if (isOpen) {
       const activeDuration = testState.duration || 30;
-      const presetMatch = [60, 120, 180, 300, 600, 900, 1200].includes(activeDuration);
-      if (presetMatch) {
+      const isPreset = PRESET_DURATIONS.some((p) => p.value === activeDuration);
+      if (isPreset) {
         setSelectedPreset(activeDuration);
       } else {
         setSelectedPreset("custom");
@@ -47,64 +62,21 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
       setCapitals(testState.capitals);
       setErrorText("");
     }
-  }, [isOpen, testState]);
-
-  // Trap focus and close on Escape
-  useEffect(() => {
-    if (!isOpen) return;
-
-    if (modalRef.current) {
-      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      }
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            last.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === last) {
-            first.focus();
-            e.preventDefault();
-          }
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]); // Only sync when modal opens to prevent overwriting active user edits
 
   if (!isOpen) return null;
 
   const handleStartTest = () => {
-    
+    const finalDuration = selectedPreset === "custom" 
+      ? (typeof customDuration === "number" ? customDuration : 0)
+      : duration;
+
     // Validation checks
-    if (!duration || isNaN(duration) || duration < 5) {
+    if (!finalDuration || isNaN(finalDuration) || finalDuration < 5) {
       setErrorText("Duration must be at least 5 seconds.");
       return;
     }
-    if (duration > 3600) {
+    if (finalDuration > 3600) {
       setErrorText("Duration cannot exceed 3600 seconds (1 hour).");
       return;
     }
@@ -112,7 +84,7 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
     // 1. Batch set custom settings in Redux store
     dispatch(
       setCustomTestSettings({
-        duration: Math.round(duration),
+        duration: Math.round(finalDuration),
         difficulty,
         punctuation,
         numbers,
@@ -127,7 +99,7 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
       punctuation,
       numbers,
       capitals,
-      wordCount: 50, // Ignored in time mode since generator yields 800 buffer words
+      wordCount: 50, // Ignored in time mode since generator yields buffer words
     });
 
     // 3. Populate words and trigger start conditions
@@ -138,16 +110,20 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="custom-test-title"
+    >
       <div
         ref={modalRef}
-        className="bg-clackr-bg border border-clackr-muted/20 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-scaleIn font-mono"
-        style={{ backgroundColor: "var(--bg-color)", color: "var(--fg-color)" }}
+        className="bg-clackr-bg border border-clackr-muted/20 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-scaleIn font-mono text-clackr-fg"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-clackr-muted/10 select-none">
           <div className="flex flex-col gap-0.5">
-            <h2 className="text-base font-bold text-clackr-fg flex items-center gap-2">
+            <h2 id="custom-test-title" className="text-base font-bold text-clackr-fg flex items-center gap-2">
               <Settings2 className="w-4 h-4 text-clackr-accent" />
               custom test setup
             </h2>
@@ -156,11 +132,9 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
             </span>
           </div>
           <button
-            onClick={() => {
-              onClose();
-            }}
-            className="p-1 rounded-lg text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all duration-200"
-            aria-label="Close modal"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all duration-200"
+            aria-label="Close custom test setup modal"
           >
             <X className="w-4 h-4" />
           </button>
@@ -176,19 +150,12 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
               <Clock className="w-3 h-3 text-clackr-accent" />
             </label>
             
-            {/* Quick Time Presets (Minutes) */}
+            {/* Quick Time Presets */}
             <div className="grid grid-cols-4 gap-1.5 select-none">
-              {[
-                { label: "1m", value: 60 },
-                { label: "2m", value: 120 },
-                { label: "3m", value: 180 },
-                { label: "5m", value: 300 },
-                { label: "10m", value: 600 },
-                { label: "15m", value: 900 },
-                { label: "20m", value: 1200 },
-              ].map((p) => (
+              {PRESET_DURATIONS.map((p) => (
                 <button
                   key={p.value}
+                  type="button"
                   onClick={() => {
                     setSelectedPreset(p.value);
                     setDuration(p.value);
@@ -204,9 +171,15 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
                 </button>
               ))}
               <button
+                type="button"
                 onClick={() => {
                   setSelectedPreset("custom");
-                  setDuration(customDuration);
+                  if (typeof customDuration === "number" && customDuration > 0) {
+                    setDuration(customDuration);
+                  } else {
+                    setCustomDuration(30);
+                    setDuration(30);
+                  }
                   setErrorText("");
                 }}
                 className={`py-1.5 text-[10px] border rounded-lg transition-all ${
@@ -226,20 +199,23 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
                   type="number"
                   min="5"
                   max="3600"
-                  value={customDuration || ""}
+                  value={customDuration}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value) || 0;
-                    setCustomDuration(val);
-                    setDuration(val);
+                    const rawVal = e.target.value;
+                    if (rawVal === "") {
+                      setCustomDuration("");
+                      setDuration(0);
+                    } else {
+                      const parsed = parseInt(rawVal, 10);
+                      const val = isNaN(parsed) ? 0 : parsed;
+                      setCustomDuration(val);
+                      setDuration(val);
+                    }
                     setErrorText("");
                   }}
-                  className="w-full border rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-clackr-accent focus:ring-1 focus:ring-clackr-accent transition-all shadow-inner"
-                  style={{
-                    backgroundColor: "var(--bg-color)",
-                    color: "var(--fg-color)",
-                    borderColor: "rgba(128, 128, 128, 0.3)"
-                  }}
+                  className="w-full border border-clackr-muted/30 bg-clackr-bg text-clackr-fg rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-clackr-accent focus:ring-1 focus:ring-clackr-accent transition-all shadow-inner"
                   placeholder="Enter seconds (e.g. 30)"
+                  aria-label="Custom duration in seconds"
                 />
                 <span className="text-[8.5px] text-clackr-fg/75 tracking-wide mt-0.5 pl-1 uppercase font-bold">
                   * custom duration is configured in seconds (5s to 3600s)
@@ -258,6 +234,7 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
               {(["easy", "hard"] as const).map((diff) => (
                 <button
                   key={diff}
+                  type="button"
                   onClick={() => {
                     setDifficulty(diff);
                   }}
@@ -286,6 +263,7 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
               ].map((mod) => (
                 <button
                   key={mod.id}
+                  type="button"
                   onClick={() => {
                     mod.set(!mod.val);
                   }}
@@ -303,7 +281,10 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
 
           {/* Error Message Box */}
           {errorText && (
-            <div className="text-[10px] text-clackr-error bg-clackr-error/5 border border-clackr-error/20 p-3 rounded-xl animate-fadeIn font-semibold text-center select-none">
+            <div 
+              className="text-[10px] text-clackr-error bg-clackr-error/5 border border-clackr-error/20 p-3 rounded-xl animate-fadeIn font-semibold text-center select-none"
+              role="alert"
+            >
               ⚠️ {errorText}
             </div>
           )}
@@ -313,15 +294,15 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
         {/* Footer Actions */}
         <div className="p-5 border-t border-clackr-muted/10 bg-clackr-fg/[0.01] flex justify-end gap-3 select-none">
           <button
-            onClick={() => {
-              onClose();
-            }}
+            type="button"
+            onClick={onClose}
             className="px-4 py-2.5 rounded-xl border border-clackr-muted/10 text-xs font-semibold text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all"
           >
             Cancel
           </button>
           
           <button
+            type="button"
             onClick={handleStartTest}
             className="px-5 py-2.5 rounded-xl bg-clackr-accent text-clackr-bg font-extrabold text-xs shadow-md shadow-clackr-accent/20 hover:brightness-110 active:scale-[0.98] transition-all"
           >

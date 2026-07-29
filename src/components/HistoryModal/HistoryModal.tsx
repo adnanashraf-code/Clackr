@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { clearHistory, loadResults } from "@/store/resultsSlice";
 import { X, Award, BarChart, Trash2 } from "lucide-react";
 import { useToast } from "@/components/Toast/ToastContext";
+import { useModalFocusTrap } from "@/hooks/useModalFocusTrap";
 
 interface HistoryModalProps {
   isOpen: boolean;
@@ -16,59 +17,19 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
   const dispatch = useDispatch();
   const toast = useToast();
   const { history, highScore } = useSelector((state: RootState) => state.results);
-  const modalRef = React.useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  // Use reusable focus trap and keyboard shortcut (Escape) hook
+  useModalFocusTrap(isOpen, onClose, modalRef);
+
+  useEffect(() => {
     if (!isOpen) return;
-
     // Refresh history directly from localStorage on open
     dispatch(loadResults());
+  }, [isOpen, dispatch]);
 
-    if (modalRef.current) {
-      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      }
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            last.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === last) {
-            first.focus();
-            e.preventDefault();
-          }
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  const formatDate = (timestamp: number) => {
+  const formatDate = useCallback((timestamp: number) => {
+    if (!timestamp || isNaN(timestamp)) return "—";
     const date = new Date(timestamp);
     return date.toLocaleDateString(undefined, {
       month: "short",
@@ -76,24 +37,33 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
+  }, []);
+
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 animate-fadeIn">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300 animate-fadeIn"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="history-modal-title"
+    >
       <div
         ref={modalRef}
-        className="bg-clackr-bg border border-clackr-muted/20 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
-        style={{ backgroundColor: "var(--bg-color)", color: "var(--fg-color)" }}
+        className="bg-clackr-bg border border-clackr-muted/20 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] text-clackr-fg"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-clackr-muted/10">
           <div className="flex flex-col">
-            <h2 className="font-mono text-lg font-bold text-clackr-fg">clackr stats history</h2>
+            <h2 id="history-modal-title" className="font-mono text-lg font-bold text-clackr-fg">
+              clackr stats history
+            </h2>
             <span className="text-[10px] text-clackr-muted font-mono uppercase tracking-widest">
               your personal typing trajectory log
             </span>
           </div>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close history modal"
             className="p-1.5 rounded-lg hover:bg-clackr-muted/10 text-clackr-muted hover:text-clackr-fg transition-colors"
@@ -104,7 +74,7 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
 
         {/* Body */}
         <div className="p-6 overflow-y-auto flex flex-col gap-6 font-sans">
-          {/* PB Card */}
+          {/* Personal Best Card */}
           <div className="p-4 rounded-xl bg-clackr-accent/10 border border-clackr-accent/20 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Award className="w-8 h-8 text-clackr-accent" />
@@ -180,6 +150,7 @@ export default function HistoryModal({ isOpen, onClose }: HistoryModalProps) {
         {history.length > 0 && (
           <div className="p-4 border-t border-clackr-muted/10 flex justify-end">
             <button
+              type="button"
               onClick={() => {
                 toast.confirm({
                   title: "Reset Records Database",
