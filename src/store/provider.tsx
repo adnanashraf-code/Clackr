@@ -6,7 +6,6 @@ import { store } from "./store";
 import { loadSettings } from "./settingsSlice";
 import { loadResults } from "./resultsSlice";
 import { soundManager } from "../lib/soundManager";
-
 import { ToastProvider } from "@/components/Toast/ToastContext";
 
 interface ProviderProps {
@@ -19,41 +18,50 @@ export function ReduxProvider({ children }: ProviderProps) {
     store.dispatch(loadSettings());
     store.dispatch(loadResults());
 
-    // Sync settings to soundManager and subscribe to any future settings changes
+    // Sync settings to soundManager and subscribe to settings state changes only
+    let prevSettings = store.getState().settings;
+
     const syncSettings = () => {
-      const state = store.getState().settings;
-      soundManager.updateSettings(state.soundEnabled, state.soundType, state.soundVolume);
+      const currentSettings = store.getState().settings;
+      if (prevSettings === currentSettings) return; // Prevent unnecessary sound manager updates on non-settings state changes (e.g. typing/timer ticks)
+      prevSettings = currentSettings;
+      soundManager.updateSettings(
+        currentSettings.soundEnabled,
+        currentSettings.soundType,
+        currentSettings.soundVolume
+      );
     };
 
-    // Run initial sync
-    syncSettings();
-
-    // Preload sound buffers immediately (especially mechanical switch sound)
+    // Run initial sync & preload sound buffers
+    soundManager.updateSettings(
+      prevSettings.soundEnabled,
+      prevSettings.soundType,
+      prevSettings.soundVolume
+    );
     soundManager.preload();
 
-    // Subscribe to store changes to keep soundManager in sync dynamically
+    // Subscribe to store changes
     const unsubscribe = store.subscribe(syncSettings);
 
-    // Play the currently active click sound on interactive/clickable elements only
+    // Play the currently active click sound on interactive/clickable elements without layout thrashing
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (!target) return;
 
-      // Exclude all input fields (text, number, etc.) to prevent double click sound on focus
-      if (target.tagName === "INPUT") {
-        return;
-      }
+      // Exclude input/textarea typing buffers to prevent double sound
+      if (target.tagName === "INPUT") return;
 
-      // Check if element is interactive (button, link, custom control, typing container, etc.)
+      // Check if element is interactive using DOM selectors (avoids layout-thrashing getComputedStyle)
       const isInteractive =
         target.tagName === "BUTTON" ||
         target.tagName === "A" ||
         target.tagName === "SELECT" ||
         target.tagName === "TEXTAREA" ||
         target.getAttribute("role") === "button" ||
+        target.closest("button") !== null ||
+        target.closest("a") !== null ||
         target.closest("#typing-area-container") !== null ||
-        target.closest("[data-key]") !== null ||
-        window.getComputedStyle(target).cursor === "pointer";
+        target.closest("[data-key]") !== null;
 
       if (isInteractive) {
         soundManager.playSound(undefined, undefined, "Click");

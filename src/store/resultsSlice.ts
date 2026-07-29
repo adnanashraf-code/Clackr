@@ -26,8 +26,8 @@ const resultsSlice = createSlice({
   initialState,
   reducers: {
     setHydratedResults(state, action: PayloadAction<ResultsState>) {
-      state.history = action.payload.history;
-      state.highScore = action.payload.highScore;
+      state.history = action.payload.history || [];
+      state.highScore = action.payload.highScore || 0;
     },
     addResult(state, action: PayloadAction<Omit<TestResultSummary, "id" | "timestamp">>) {
       const now = Date.now();
@@ -45,19 +45,26 @@ const resultsSlice = createSlice({
         return;
       }
 
+      const id = typeof crypto !== "undefined" && crypto.randomUUID 
+        ? crypto.randomUUID() 
+        : Math.random().toString(36).substring(2, 9);
+
       const newResult: TestResultSummary = {
         ...action.payload,
-        id: Math.random().toString(36).substring(2, 9),
+        id,
         timestamp: now,
       };
+
       state.history.unshift(newResult); // newest first
       if (newResult.wpm > state.highScore) {
         state.highScore = newResult.wpm;
       }
-      // Limit history to last 100 tests to prevent localstorage bloat
+
+      // Limit history to last 100 tests to prevent localStorage bloat
       if (state.history.length > 100) {
         state.history = state.history.slice(0, 100);
       }
+
       if (typeof window !== "undefined") {
         try {
           const plainState = current(state);
