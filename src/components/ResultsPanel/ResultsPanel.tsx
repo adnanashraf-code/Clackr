@@ -1,19 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { addResult } from "@/store/resultsSlice";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { 
-  RefreshCw, 
   ArrowRight, 
   Camera, 
-  Target, 
   Download, 
   Info, 
   FileText, 
-  RotateCcw
+  RotateCcw,
+  Target
 } from "lucide-react";
 import { getCharStats, calculateConsistency } from "@/lib/statsCalculator";
 
@@ -53,24 +52,66 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
   const [isPracticeOpen, setIsPracticeOpen] = useState(false);
   const [isDownloadDropdownOpen, setIsDownloadDropdownOpen] = useState(false);
 
+  const downloadRef = useRef<HTMLDivElement>(null);
+  const hasSavedResultRef = useRef(false);
+
+  // Close download dropdown on click outside or Escape key press
+  useEffect(() => {
+    if (!isDownloadDropdownOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (downloadRef.current && !downloadRef.current.contains(e.target as Node)) {
+        setIsDownloadDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsDownloadDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isDownloadDropdownOpen]);
+
   // Time calculations
-  const timeTaken = startTime && endTime ? (endTime - startTime) / 1000 : 0;
+  const timeTaken = useMemo(() => {
+    return startTime && endTime ? (endTime - startTime) / 1000 : 0;
+  }, [startTime, endTime]);
   
   // Character breakdown stats
-  const charStats = getCharStats(words, typedWords, typedInput, currentWordIndex);
+  const charStats = useMemo(() => {
+    return getCharStats(words, typedWords, typedInput, currentWordIndex);
+  }, [words, typedWords, typedInput, currentWordIndex]);
   
   // Final speeds and accuracy
-  const finalWpm = Math.max(0, Math.round((charStats.correct / 5) / (timeTaken / 60) || 0));
-  const finalRaw = Math.max(0, Math.round((totalKeystrokes / 5) / (timeTaken / 60) || 0));
-  const accuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 1000) / 10 : 100;
-  const consistency = calculateConsistency(wpmHistory);
+  const finalWpm = useMemo(() => {
+    return Math.max(0, Math.round((charStats.correct / 5) / (timeTaken / 60) || 0));
+  }, [charStats.correct, timeTaken]);
+
+  const finalRaw = useMemo(() => {
+    return Math.max(0, Math.round((totalKeystrokes / 5) / (timeTaken / 60) || 0));
+  }, [totalKeystrokes, timeTaken]);
+
+  const accuracy = useMemo(() => {
+    return totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 1000) / 10 : 100;
+  }, [totalKeystrokes, correctKeystrokes]);
+
+  const consistency = useMemo(() => {
+    return calculateConsistency(wpmHistory);
+  }, [wpmHistory]);
 
   // Identify wrong words in this session
-  const thisTestWrongWords = words
-    .map((w, i) => (i < typedWords.length && typedWords[i] !== w ? w : null))
-    .filter((w): w is string => w !== null);
-
-  const hasSavedResultRef = React.useRef(false);
+  const thisTestWrongWords = useMemo(() => {
+    return words
+      .map((w, i) => (i < typedWords.length && typedWords[i] !== w ? w : null))
+      .filter((w): w is string => w !== null);
+  }, [words, typedWords]);
 
   // Auto-save test result to history and wrong words on mount
   useEffect(() => {
@@ -93,26 +134,33 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
       })
     );
 
-    // Save wrong words
+    // Save wrong words to localStorage
     if (thisTestWrongWords.length > 0 && typeof window !== "undefined") {
-      const saved = localStorage.getItem("clackr_practice_words");
-      let allTime: string[] = [];
-      if (saved) {
-        try {
-          allTime = JSON.parse(saved);
-        } catch (e) {
-          console.error(e);
+      try {
+        const saved = localStorage.getItem("clackr_practice_words");
+        let allTime: string[] = [];
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) allTime = parsed;
+          } catch (e) {
+            console.error(e);
+          }
         }
+        const merged = Array.from(new Set([...allTime, ...thisTestWrongWords])).slice(0, 100);
+        localStorage.setItem("clackr_practice_words", JSON.stringify(merged));
+      } catch (err) {
+        console.error("Failed to update clackr_practice_words in localStorage:", err);
       }
-      const merged = Array.from(new Set([...allTime, ...thisTestWrongWords])).slice(0, 100);
-      localStorage.setItem("clackr_practice_words", JSON.stringify(merged));
     }
-  }, []);
+  }, [dispatch, finalWpm, finalRaw, accuracy, consistency, mode, duration, wordCount, thisTestWrongWords]);
 
   // Format Recharts data
-  const chartData = wpmHistory.length > 0 
-    ? wpmHistory 
-    : [{ time: 1, wpm: finalWpm, rawWpm: finalRaw }];
+  const chartData = useMemo(() => {
+    return wpmHistory.length > 0 
+      ? wpmHistory 
+      : [{ time: 1, wpm: finalWpm, rawWpm: finalRaw }];
+  }, [wpmHistory, finalWpm, finalRaw]);
 
   const isNewHighScore = finalWpm > 0 && finalWpm >= highScore;
 
@@ -140,7 +188,10 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
     const link = document.createElement("a");
     link.href = url;
     link.download = `clackr-${finalWpm}wpm.json`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     setIsDownloadDropdownOpen(false);
   };
 
@@ -153,7 +204,10 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
     const link = document.createElement("a");
     link.href = url;
     link.download = `clackr-${finalWpm}wpm.csv`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     setIsDownloadDropdownOpen(false);
   };
 
@@ -320,6 +374,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
       <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 pt-3 text-clackr-fg/70 text-sm font-mono mt-1 relative select-none">
         
         <button 
+          type="button"
           onClick={onNextTest} 
           className="flex items-center gap-2 hover:text-clackr-accent transition-colors duration-150 py-1"
         >
@@ -328,6 +383,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
         </button>
 
         <button 
+          type="button"
           onClick={onRestart} 
           className="flex items-center gap-2 hover:text-clackr-accent transition-colors duration-150 py-1"
         >
@@ -336,6 +392,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
         </button>
 
         <button 
+          type="button"
           onClick={() => setIsShareOpen(true)}
           className="flex items-center gap-2 hover:text-clackr-accent transition-colors duration-150 py-1"
         >
@@ -344,6 +401,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
         </button>
 
         <button 
+          type="button"
           onClick={() => setIsWordReviewOpen(true)}
           className="flex items-center gap-2 hover:text-clackr-accent transition-colors duration-150 py-1"
         >
@@ -352,6 +410,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
         </button>
 
         <button 
+          type="button"
           onClick={() => setIsPracticeOpen(true)}
           className="flex items-center gap-2 hover:text-clackr-accent transition-colors duration-150 py-1"
         >
@@ -359,9 +418,12 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
           <span>Practice Words</span>
         </button>
 
-        <div className="relative">
+        <div className="relative" ref={downloadRef}>
           <button 
-            onClick={() => setIsDownloadDropdownOpen(prev => !prev)}
+            type="button"
+            onClick={() => setIsDownloadDropdownOpen((prev) => !prev)}
+            aria-expanded={isDownloadDropdownOpen}
+            aria-haspopup="true"
             className="flex items-center gap-2 hover:text-clackr-accent transition-colors duration-150 py-1"
           >
             <Download className="w-4 h-4" />
@@ -371,12 +433,14 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
           {isDownloadDropdownOpen && (
             <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 min-w-[120px] bg-clackr-bg border border-clackr-muted/20 rounded-lg shadow-xl p-1.5 flex flex-col gap-1 text-xs text-clackr-fg select-none">
               <button 
+                type="button"
                 onClick={handleDownloadJSON}
                 className="w-full text-left py-1.5 px-3 rounded hover:bg-clackr-fg/5 hover:text-clackr-accent transition-all text-xs font-semibold"
               >
                 JSON format
               </button>
               <button 
+                type="button"
                 onClick={handleDownloadCSV}
                 className="w-full text-left py-1.5 px-3 rounded hover:bg-clackr-fg/5 hover:text-clackr-accent transition-all text-xs font-semibold"
               >

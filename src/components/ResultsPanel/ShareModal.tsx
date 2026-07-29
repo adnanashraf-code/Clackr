@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import { X, Copy, Download, Share2, Check, Trophy } from "lucide-react";
+import React, { useRef, useMemo } from "react";
+import { X, Copy, Download, Share2 } from "lucide-react";
 import { useToast } from "@/components/Toast/ToastContext";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { useModalFocusTrap } from "@/hooks/useModalFocusTrap";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -35,68 +36,26 @@ export default function ShareModal({
   wordCount,
   backspaceCount,
   chartData,
-  isNewHighScore,
-  highScore,
 }: ShareModalProps) {
   const toast = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
+  // Use reusable focus trap and keyboard shortcut (Escape) hook
+  useModalFocusTrap(isOpen, onClose, modalRef);
 
-    if (modalRef.current) {
-      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      }
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            last.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === last) {
-            first.focus();
-            e.preventDefault();
-          }
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  // Formats date memoized
+  const formattedDate = useMemo(() => {
+    return new Date().toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, []);
 
   if (!isOpen) return null;
-
-  // Formats date
-  const formattedDate = new Date().toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 
   const shareText = `clackr typing speed: ${finalWpm} WPM | Accuracy: ${accuracy}% | Raw: ${finalRaw} WPM | Mode: ${mode} ${mode === "time" ? duration : mode === "words" ? wordCount : ""}`;
 
@@ -123,10 +82,10 @@ export default function ShareModal({
 
       // Fetch theme colors dynamically
       const style = window.getComputedStyle(document.documentElement);
-      const bgColor = style.getPropertyValue("--bg-color").trim() || "#211F1C";
-      const fgColor = style.getPropertyValue("--fg-color").trim() || "#F0E9DC";
+      const bgColor = style.getPropertyValue("--bg-color").trim() || "#08090d";
+      const fgColor = style.getPropertyValue("--fg-color").trim() || "#e8e6e3";
       const accentColor = style.getPropertyValue("--accent").trim() || "#6C93D9";
-      const mutedColor = style.getPropertyValue("--fg-muted").trim() || "#948C7C";
+      const mutedColor = style.getPropertyValue("--fg-muted").trim() || "#646669";
 
       // 1. Draw Background
       ctx.fillStyle = bgColor;
@@ -231,7 +190,10 @@ export default function ShareModal({
     const link = document.createElement("a");
     link.download = `clackr-${finalWpm}wpm.png`;
     link.href = url;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     toast.success("Results score card downloaded!");
   };
 
@@ -250,18 +212,28 @@ export default function ShareModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div ref={modalRef} className="relative w-full max-w-3xl bg-clackr-bg border border-clackr-muted/20 rounded-2xl p-6 shadow-2xl animate-scaleUp">
-        
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="share-modal-title"
+    >
+      <div 
+        ref={modalRef} 
+        className="relative w-full max-w-3xl bg-clackr-bg border border-clackr-muted/20 rounded-2xl p-6 shadow-2xl animate-scaleUp text-clackr-fg"
+      >
         <button 
+          type="button"
           onClick={onClose} 
           aria-label="Close share modal"
-          className="absolute top-4 right-4 text-clackr-muted hover:text-clackr-fg transition-colors duration-150"
+          className="absolute top-4 right-4 text-clackr-muted hover:text-clackr-fg transition-colors duration-150 p-1 rounded-lg hover:bg-clackr-fg/5"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-clackr-fg font-mono text-xl font-bold mb-6">Share your result</h2>
+        <h2 id="share-modal-title" className="text-clackr-fg font-mono text-xl font-bold mb-6">
+          Share your result
+        </h2>
 
         {/* Card Container Preview */}
         <div 
@@ -271,7 +243,7 @@ export default function ShareModal({
           {/* Top Info */}
           <div className="flex justify-between items-center text-clackr-muted text-xs font-mono">
             <span className="text-clackr-accent font-bold text-lg">clackr</span>
-            <span>{formattedDate} | clackr.theshiva.xyz</span>
+            <span>{formattedDate} | clackr-plum.vercel.app</span>
           </div>
 
           {/* Main Block */}
@@ -341,6 +313,7 @@ export default function ShareModal({
         {/* Action Controls */}
         <div className="flex justify-center gap-8 mt-6 text-clackr-muted font-mono text-sm">
           <button 
+            type="button"
             onClick={handleCopy} 
             className="flex items-center gap-2 hover:text-clackr-fg transition-colors duration-150 py-2 px-4 rounded-lg hover:bg-clackr-fg/5"
           >
@@ -349,6 +322,7 @@ export default function ShareModal({
           </button>
           
           <button 
+            type="button"
             onClick={handleDownload} 
             className="flex items-center gap-2 hover:text-clackr-fg transition-colors duration-150 py-2 px-4 rounded-lg hover:bg-clackr-fg/5"
           >
@@ -357,6 +331,7 @@ export default function ShareModal({
           </button>
 
           <button 
+            type="button"
             onClick={handlePost} 
             className="flex items-center gap-2 hover:text-clackr-fg transition-colors duration-150 py-2 px-4 rounded-lg hover:bg-clackr-fg/5"
           >

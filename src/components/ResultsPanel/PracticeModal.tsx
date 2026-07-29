@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { X, Play, RotateCcw } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { initTest, setMode, setWordCount } from "@/store/testSlice";
 import { useToast } from "@/components/Toast/ToastContext";
+import { useModalFocusTrap } from "@/hooks/useModalFocusTrap";
 
 interface PracticeModalProps {
   isOpen: boolean;
@@ -19,71 +20,37 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
   const [allTimeWrongWords, setAllTimeWrongWords] = useState<string[]>([]);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Use reusable focus trap and keyboard shortcut (Escape) hook
+  useModalFocusTrap(isOpen, onClose, modalRef);
+
+  // Load all-time wrong words when modal opens
   useEffect(() => {
     if (!isOpen) return;
-
-    if (modalRef.current) {
-      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      }
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            last.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === last) {
-            first.focus();
-            e.preventDefault();
-          }
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // Load all time wrong words on mount
-  useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("clackr_practice_words");
       if (saved) {
         try {
-          setAllTimeWrongWords(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setAllTimeWrongWords(parsed);
+          }
         } catch (e) {
-          console.error(e);
+          console.error("Failed to parse practice words from localStorage:", e);
         }
       }
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
-  const currentWords = source === "this" ? thisTestWrongWords : allTimeWrongWords;
+  const currentWords = useMemo(() => {
+    return source === "this" ? thisTestWrongWords : allTimeWrongWords;
+  }, [source, thisTestWrongWords, allTimeWrongWords]);
 
   // Mastery formula: Math.max(0, Math.round(100 - currentWords.length * 1.8))
-  const mastery = Math.max(0, Math.round(100 - currentWords.length * 1.8));
+  const mastery = useMemo(() => {
+    return Math.max(0, Math.round(100 - currentWords.length * 1.8));
+  }, [currentWords.length]);
+
+  if (!isOpen) return null;
 
   const handleReset = () => {
     if (source === "this") {
@@ -94,7 +61,11 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
         message: "Are you sure you want to clear your all-time practice words history?",
         confirmText: "Yes, Clear Words",
         onConfirm: () => {
-          localStorage.removeItem("clackr_practice_words");
+          try {
+            localStorage.removeItem("clackr_practice_words");
+          } catch (e) {
+            console.error("Failed to clear localStorage:", e);
+          }
           setAllTimeWrongWords([]);
           toast.success("Practice words history cleared.");
         },
@@ -125,25 +96,38 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div ref={modalRef} className="relative w-full max-w-xl bg-clackr-bg border border-clackr-muted/20 rounded-2xl p-6 shadow-2xl animate-scaleUp">
-        
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="practice-modal-title"
+    >
+      <div 
+        ref={modalRef} 
+        className="relative w-full max-w-xl bg-clackr-bg border border-clackr-muted/20 rounded-2xl p-6 shadow-2xl animate-scaleUp text-clackr-fg"
+      >
         <button 
+          type="button"
           onClick={onClose} 
           aria-label="Close practice modal"
-          className="absolute top-4 right-4 text-clackr-muted hover:text-clackr-fg transition-colors duration-150"
+          className="absolute top-4 right-4 text-clackr-muted hover:text-clackr-fg transition-colors duration-150 p-1 rounded-lg hover:bg-clackr-fg/5"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Title */}
-        <h2 className="text-clackr-fg font-mono text-xl font-bold mb-4 select-none">Practice Words</h2>
+        <h2 id="practice-modal-title" className="text-clackr-fg font-mono text-xl font-bold mb-4 select-none">
+          Practice Words
+        </h2>
 
         {/* Source Toggles */}
         <div className="flex flex-col gap-2 mb-6">
-          <span className="text-[10px] text-clackr-accent font-mono uppercase tracking-wider select-none font-bold">Source</span>
+          <span className="text-[10px] text-clackr-accent font-mono uppercase tracking-wider select-none font-bold">
+            Source
+          </span>
           <div className="flex gap-2">
             <button 
+              type="button"
               onClick={() => setSource("this")} 
               className={`py-1.5 px-4 rounded-lg border font-mono text-xs transition-all ${
                 source === "this" 
@@ -154,6 +138,7 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
               this test
             </button>
             <button 
+              type="button"
               onClick={() => setSource("allTime")} 
               className={`py-1.5 px-4 rounded-lg border font-mono text-xs transition-all ${
                 source === "allTime" 
@@ -185,6 +170,7 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
           </div>
           {currentWords.length > 0 && (
             <button 
+              type="button"
               onClick={handleReset}
               className="flex items-center gap-1 text-[10px] text-clackr-muted hover:text-clackr-error transition-all uppercase font-semibold"
             >
@@ -201,7 +187,7 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
           </span>
           <div className="w-full h-24 overflow-y-auto pr-1 p-3 rounded-lg border border-clackr-muted/10 bg-clackr-fg/[0.01] text-xs font-mono text-clackr-fg/70 leading-loose">
             {currentWords.map((word, i) => (
-              <span key={i}>
+              <span key={`${word}-${i}`}>
                 {word}
                 {i < currentWords.length - 1 && <span className="mx-2 opacity-40">•</span>}
               </span>
@@ -216,6 +202,7 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
 
         {/* Start Button */}
         <button 
+          type="button"
           onClick={handleStart}
           disabled={currentWords.length === 0}
           className={`w-full py-3 rounded-xl font-mono text-sm font-bold flex items-center justify-center gap-2 transition-all ${

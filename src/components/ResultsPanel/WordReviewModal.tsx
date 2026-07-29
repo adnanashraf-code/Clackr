@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { X, Download } from "lucide-react";
+import { useModalFocusTrap } from "@/hooks/useModalFocusTrap";
 
 interface WordReviewModalProps {
   isOpen: boolean;
@@ -14,73 +15,35 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
   const [filter, setFilter] = useState<"all" | "wrong">("all");
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
+  // Use reusable focus trap and keyboard shortcut (Escape) hook
+  useModalFocusTrap(isOpen, onClose, modalRef);
 
-    if (modalRef.current) {
-      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      }
-    }
+  // Process words array memoized to prevent re-mapping on filter toggle
+  const processedWords = useMemo(() => {
+    return words
+      .map((word, i) => {
+        const typed = typedWords[i];
+        const hasTyped = i < typedWords.length;
+        const isCorrect = hasTyped && typed === word;
+        return {
+          word,
+          typed: typed || "",
+          hasTyped,
+          isCorrect,
+        };
+      })
+      .filter((w) => w.hasTyped); // Only show words they actually attempted
+  }, [words, typedWords]);
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
+  const correctCount = useMemo(() => processedWords.filter((w) => w.isCorrect).length, [processedWords]);
+  const wrongCount = useMemo(() => processedWords.filter((w) => !w.isCorrect).length, [processedWords]);
+  const notReachedCount = useMemo(() => Math.max(0, words.length - typedWords.length), [words.length, typedWords.length]);
 
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            last.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === last) {
-            first.focus();
-            e.preventDefault();
-          }
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  const displayedWords = useMemo(() => {
+    return filter === "all" ? processedWords : processedWords.filter((w) => !w.isCorrect);
+  }, [filter, processedWords]);
 
   if (!isOpen) return null;
-
-  // Process words
-  const processedWords = words
-    .map((word, i) => {
-      const typed = typedWords[i];
-      const hasTyped = i < typedWords.length;
-      const isCorrect = hasTyped && typed === word;
-      return {
-        word,
-        typed: typed || "",
-        hasTyped,
-        isCorrect,
-      };
-    })
-    .filter((w) => w.hasTyped); // Only show words they actually attempted
-
-  const correctCount = processedWords.filter((w) => w.isCorrect).length;
-  const wrongCount = processedWords.filter((w) => !w.isCorrect).length;
-  const notReachedCount = Math.max(0, words.length - typedWords.length);
-
-  const displayedWords = filter === "all" ? processedWords : processedWords.filter((w) => !w.isCorrect);
 
   const handleDownload = () => {
     // Generate text report
@@ -103,16 +66,25 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div ref={modalRef} className="relative w-full max-w-3xl bg-clackr-bg border border-clackr-muted/20 rounded-2xl p-6 shadow-2xl animate-scaleUp">
-        
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="word-review-title"
+    >
+      <div 
+        ref={modalRef} 
+        className="relative w-full max-w-3xl bg-clackr-bg border border-clackr-muted/20 rounded-2xl p-6 shadow-2xl animate-scaleUp text-clackr-fg"
+      >
         <button 
+          type="button"
           onClick={onClose} 
           aria-label="Close word review modal"
-          className="absolute top-4 right-4 text-clackr-muted hover:text-clackr-fg transition-colors duration-150"
+          className="absolute top-4 right-4 text-clackr-muted hover:text-clackr-fg transition-colors duration-150 p-1 rounded-lg hover:bg-clackr-fg/5"
         >
           <X className="w-5 h-5" />
         </button>
@@ -120,13 +92,16 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
         {/* Title */}
         <div className="flex justify-between items-center border-b border-clackr-muted/10 pb-4 mb-4 select-none">
           <div>
-            <h2 className="text-clackr-fg font-mono text-xl font-bold">Word Review</h2>
+            <h2 id="word-review-title" className="text-clackr-fg font-mono text-xl font-bold">
+              Word Review
+            </h2>
             <p className="text-xs text-clackr-fg/60 font-mono mt-0.5">
               {correctCount}/{processedWords.length} correct
             </p>
           </div>
           <div className="flex gap-3 text-xs font-mono">
             <button 
+              type="button"
               onClick={handleDownload} 
               className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-clackr-muted/20 hover:border-clackr-fg text-clackr-fg/80 hover:text-clackr-fg transition-all"
             >
@@ -147,6 +122,7 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
           </span>
           <div className="flex gap-1.5 ml-auto">
             <button 
+              type="button"
               onClick={() => setFilter("all")} 
               className={`py-1 px-3.5 rounded-lg border transition-all text-xs ${
                 filter === "all" 
@@ -157,6 +133,7 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
               All
             </button>
             <button 
+              type="button"
               onClick={() => setFilter("wrong")} 
               className={`py-1 px-3.5 rounded-lg border transition-all text-xs ${
                 filter === "wrong" 
@@ -173,7 +150,7 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
         <div className="w-full max-h-72 overflow-y-auto pr-1 flex flex-wrap gap-2.5 p-3 rounded-xl bg-clackr-fg/[0.02] border border-clackr-muted/5">
           {displayedWords.map((w, idx) => (
             <div 
-              key={idx} 
+              key={`${w.word}-${idx}`} 
               className={`px-3 py-1 rounded-lg border text-sm font-mono flex flex-col items-center group relative cursor-help transition-all ${
                 w.isCorrect 
                   ? "border-clackr-correct/30 text-clackr-correct bg-clackr-correct/5" 
