@@ -1,4 +1,13 @@
-import { EASY_WORDS, HARD_WORDS, EASY_SENTENCES, HARD_SENTENCES, NATURAL_SENTENCES, QUOTES, CODE_SNIPPETS } from "./wordLists";
+import {
+  EASY_WORDS,
+  SHORT_EASY_WORDS,
+  HARD_WORDS,
+  EASY_SENTENCES,
+  HARD_SENTENCES,
+  NATURAL_SENTENCES,
+  QUOTES,
+  CODE_SNIPPETS,
+} from "./wordLists";
 
 interface GeneratorConfig {
   mode: "time" | "words" | "quote" | "zen" | "code";
@@ -51,13 +60,13 @@ export function generateWords(config: GeneratorConfig): string[] {
   // 3. Time / Words / Zen Modes
   let targetCount = wordCount;
   if (mode === "time") {
-    targetCount = 800; // Generate high buffer for 120s high WPM typists
+    targetCount = 800; // High buffer for 120s high WPM typists
   } else if (mode === "zen") {
     targetCount = 120;
   }
 
   // Build raw words list from dedicated difficulty sentence & word pools
-  let rawWords: string[] = [];
+  const rawWords: string[] = [];
 
   const sentencesPool = difficulty === "easy" 
     ? EASY_SENTENCES 
@@ -65,9 +74,8 @@ export function generateWords(config: GeneratorConfig): string[] {
       ? HARD_SENTENCES 
       : NATURAL_SENTENCES;
 
-  const shortEasyPool = EASY_WORDS.filter((w) => w.length <= 5);
   const wordPool = difficulty === "easy" 
-    ? shortEasyPool 
+    ? SHORT_EASY_WORDS 
     : HARD_WORDS;
 
   // Start with a natural sentence from the selected difficulty pool
@@ -133,10 +141,10 @@ export function generateWords(config: GeneratorConfig): string[] {
       if (currentSentenceWordCount >= sentenceLength || i === dedupedWords.length - 1) {
         // End sentence with period, question mark, or exclamation
         const endPunc = Math.random() < 0.15 ? "?" : Math.random() < 0.05 ? "!" : ".";
-        word = word.replace(/[,\.?!]+$/, "") + endPunc;
+        word = word.replace(/[,.?!]+$/, "") + endPunc;
         currentSentenceWordCount = 0;
         sentenceLength = Math.floor(Math.random() * 6) + 6;
-      } else if (currentSentenceWordCount > 3 && Math.random() < 0.15 && !/[,\.?!]$/.test(word)) {
+      } else if (currentSentenceWordCount > 3 && Math.random() < 0.15 && !/[,.?!]$/.test(word)) {
         // Mid-sentence comma
         word = word + ",";
       }

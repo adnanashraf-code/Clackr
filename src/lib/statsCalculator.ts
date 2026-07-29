@@ -2,7 +2,7 @@ import { WpmHistoryPoint } from "@/store/testSlice";
 
 /**
  * Calculates net WPM (Words Per Minute) based on correct characters.
- * 1 Word = 5 characters.
+ * Standard typing benchmark: 1 Word = 5 characters.
  */
 export function calculateWpm(correctChars: number, timeInSeconds: number): number {
   if (timeInSeconds <= 0) return 0;
@@ -32,36 +32,36 @@ export function calculateAccuracy(correctKeystrokes: number, totalKeystrokes: nu
 
 /**
  * Calculates consistency percentage based on WPM history variance.
- * Lower variation = Higher consistency.
+ * High consistency = Low variation in keystroke rhythm.
+ * Zero-allocation high-performance implementation.
  */
 export function calculateConsistency(history: WpmHistoryPoint[]): number {
-  if (history.length < 3) return 92; // Default starting consistency placeholder
+  const n = history.length;
+  if (n < 3) return 92; // Default starting consistency placeholder
 
-  // Extract WPM values
-  const wpmList = history.map((pt) => pt.wpm);
-  const n = wpmList.length;
-
-  // Calculate Mean (Average WPM)
-  const sum = wpmList.reduce((acc, val) => acc + val, 0);
+  // Single-pass Sum calculation
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    sum += history[i].wpm;
+  }
   const mean = sum / n;
-
   if (mean <= 0) return 0;
 
-  // Calculate Variance
-  const squaredDiffs = wpmList.map((wpm) => Math.pow(wpm - mean, 2));
-  const variance = squaredDiffs.reduce((acc, val) => acc + val, 0) / n;
+  // Single-pass Variance calculation (using diff * diff instead of Math.pow)
+  let sumSquaredDiff = 0;
+  for (let i = 0; i < n; i++) {
+    const diff = history[i].wpm - mean;
+    sumSquaredDiff += diff * diff;
+  }
 
-  // Calculate Standard Deviation
+  const variance = sumSquaredDiff / n;
   const stdDev = Math.sqrt(variance);
 
   // Coefficient of Variation (CV)
   const cv = stdDev / mean;
 
-  // Map CV to a consistency score (e.g. CV of 0 = 100% consistency, CV >= 0.5 = 50% or less)
-  // Standard typing consistency is usually between 60% and 98%.
-  const consistency = Math.max(0, Math.min(100, Math.round((1 - cv * 0.7) * 100)));
-
-  return consistency;
+  // Map CV to consistency score
+  return Math.max(0, Math.min(100, Math.round((1 - cv * 0.7) * 100)));
 }
 
 /**
@@ -79,17 +79,13 @@ export function getCharStats(
   let extra = 0;
   let missed = 0;
 
-  // Process all words up to the current one
   const totalProcessed = Math.min(words.length, currentWordIndex + 1);
 
   for (let w = 0; w < totalProcessed; w++) {
     const original = words[w] || "";
     const typed = w === currentWordIndex ? typedInput : typedWords[w] || "";
 
-    // If word is completely typed and was completed before current index
     const isCompletedWord = w < currentWordIndex;
-
-    // Compare characters
     const maxLen = Math.max(original.length, typed.length);
 
     for (let i = 0; i < maxLen; i++) {
@@ -97,12 +93,10 @@ export function getCharStats(
       const typedChar = typed[i];
 
       if (typedChar === undefined) {
-        // Missed characters (left blank in skipped/completed words)
         if (isCompletedWord) {
           missed++;
         }
       } else if (origChar === undefined) {
-        // Extra characters typed
         extra++;
       } else if (typedChar === origChar) {
         correct++;

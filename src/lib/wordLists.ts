@@ -301,3 +301,6 @@ export const CODE_SNIPPETS: string[] = [
   "const memoizedValue = useMemo(() => computeExpensiveValue(a, b), [a, b]);",
   "export const selectActiveUser = (state: RootState) => state.auth.currentUser;"
 ];
+
+export const SHORT_EASY_WORDS = EASY_WORDS.filter((w) => w.length <= 5);
+
