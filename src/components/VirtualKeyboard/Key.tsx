@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext } from "react";
+import React, { useContext, memo } from "react";
 import { SizeContext } from "./VirtualKeyboard";
 
 interface KeyProps {
@@ -13,7 +13,7 @@ interface KeyProps {
   pressed?: boolean;
 }
 
-export default function Key({
+function Key({
   label,
   subLabel,
   width = 1,
@@ -23,15 +23,18 @@ export default function Key({
   pressed = false,
 }: KeyProps) {
   const sizeConfig = useContext(SizeContext);
-  // Center-to-center standard dynamic formula for width of Xu key: X * keyWidthMult - keyGap.
+  
+  // Standard dynamic formula for width of Xu key: X * keyWidthMult - keyGap.
   const pxWidth = Math.round(width * sizeConfig.keyWidthMult - sizeConfig.keyGap);
   const pxHeight = sizeConfig.height;
 
   const handleTouchStart = () => {
-    if (typeof window !== "undefined" && "vibrate" in navigator) {
+    if (typeof window !== "undefined" && typeof navigator !== "undefined" && "vibrate" in navigator) {
       try {
         navigator.vibrate(8);
-      } catch (e) {}
+      } catch (e) {
+        // Silent catch for unsupported browsers
+      }
     }
   };
 
@@ -64,3 +67,6 @@ export default function Key({
     </div>
   );
 }
+
+// Wrap in React.memo to prevent 80+ keys re-rendering on every keystroke
+export default memo(Key);
