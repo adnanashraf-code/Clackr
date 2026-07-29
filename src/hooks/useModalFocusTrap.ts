@@ -1,7 +1,10 @@
-import { useEffect, RefObject } from "react";
+import { useEffect, useRef, RefObject } from "react";
+
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])';
 
 /**
- * Custom hook to manage modal focus trapping and keyboard shortcuts (Escape key).
+ * Custom hook to manage modal focus trapping, accessibility focus restoration, and Escape key dismissal.
  * 
  * @param isOpen Whether the modal is currently open
  * @param onClose Callback function to trigger modal close
@@ -12,16 +15,23 @@ export function useModalFocusTrap(
   onClose: () => void,
   containerRef: RefObject<HTMLElement | null>
 ) {
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!isOpen) return;
 
-    // Focus the first focusable element when modal opens
+    // Save previously focused element to restore focus when modal closes
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      previousActiveElement.current = document.activeElement;
+    }
+
+    // Focus the first focusable element inside the modal container when opened
     if (containerRef.current) {
-      const focusable = containerRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
+      const focusable = containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
       if (focusable.length > 0) {
         focusable[0].focus();
+      } else {
+        containerRef.current.focus();
       }
     }
 
@@ -32,9 +42,7 @@ export function useModalFocusTrap(
       }
 
       if (e.key === "Tab" && containerRef.current) {
-        const focusable = containerRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+        const focusable = containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
         if (focusable.length === 0) return;
 
         const first = focusable[0];
@@ -55,6 +63,13 @@ export function useModalFocusTrap(
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      // Restore focus to original element when modal closes/unmounts
+      if (previousActiveElement.current) {
+        previousActiveElement.current.focus();
+      }
+    };
   }, [isOpen, onClose, containerRef]);
 }

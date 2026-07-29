@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
@@ -11,16 +11,15 @@ import {
   recordHistoryPoint,
   initTest,
 } from "@/store/testSlice";
-import { addResult } from "@/store/resultsSlice";
 import { soundManager } from "@/lib/soundManager";
-import { calculateWpm, calculateRawWpm, calculateAccuracy, calculateConsistency, getCharStats } from "@/lib/statsCalculator";
+import { calculateWpm, calculateRawWpm, getCharStats } from "@/lib/statsCalculator";
 import { generateWords } from "@/lib/wordGenerator";
 import { triggerConfetti } from "@/lib/confetti";
 
 export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | null>) {
   const dispatch = useDispatch();
   
-  // Granular Redux selectors to optimize rendering and prevent unnecessary keystroke re-renders
+  // Granular Redux selectors to optimize rendering
   const status = useSelector((state: RootState) => state.test.status);
   const mode = useSelector((state: RootState) => state.test.mode);
   const duration = useSelector((state: RootState) => state.test.duration);
@@ -34,10 +33,7 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
   const currentWordIndex = useSelector((state: RootState) => state.test.currentWordIndex);
   const typedInput = useSelector((state: RootState) => state.test.typedInput);
   const startTime = useSelector((state: RootState) => state.test.startTime);
-  const endTime = useSelector((state: RootState) => state.test.endTime);
   const totalKeystrokes = useSelector((state: RootState) => state.test.totalKeystrokes);
-  const correctKeystrokes = useSelector((state: RootState) => state.test.correctKeystrokes);
-  const wpmHistory = useSelector((state: RootState) => state.test.wpmHistory);
 
   const soundEnabled = useSelector((state: RootState) => state.settings.soundEnabled);
   const soundType = useSelector((state: RootState) => state.settings.soundType);
@@ -64,8 +60,21 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
     totalKeystrokesRef.current = totalKeystrokes;
   }, [status, startTime, words, typedWords, typedInput, currentWordIndex, totalKeystrokes]);
 
+  // Audio trigger helper
+  const playKeystrokeSound = useCallback(
+    (isCorrect: boolean, key: string = "") => {
+      if (!soundEnabled) return;
+      if (!isCorrect && errorSoundEnabled) {
+        soundManager.playSound("error", soundVolume);
+      } else {
+        soundManager.playSound(soundType, soundVolume, key);
+      }
+    },
+    [soundEnabled, errorSoundEnabled, soundVolume, soundType]
+  );
+
   // Reset/Generate words
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     const newWords = generateWords({
       mode,
       difficulty,
@@ -79,116 +88,112 @@ export function useTypingEngine(inputRef: React.RefObject<HTMLInputElement | nul
       inputRef.current.value = "";
       inputRef.current.focus();
     }
-  };
+  }, [dispatch, mode, difficulty, punctuation, numbers, capitals, wordCount, inputRef]);
 
   // Generate words on initial load or config change
   useEffect(() => {
     handleReset();
-  }, [mode, duration, wordCount, difficulty, punctuation, numbers, capitals]);
-
-  // Audio trigger helper
-  const playKeystrokeSound = (isCorrect: boolean, key: string = "") => {
-    if (!soundEnabled) return;
-    if (!isCorrect && errorSoundEnabled) {
-      soundManager.playSound("error", soundVolume);
-    } else {
-      soundManager.playSound(soundType, soundVolume, key);
-    }
-  };
+  }, [handleReset]);
 
   // Keystroke Handler
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Ignore Escape and Tab in typing handler (handled globally in page.tsx)
-    if (e.key === "Escape" || e.key === "Tab") {
-      return;
-    }
-
-    // Ignore modifiers
-    if (e.ctrlKey || e.altKey || e.metaKey || e.key === "Shift") {
-      return;
-    }
-
-    const currentStatus = statusRef.current;
-    if (currentStatus === "finished") {
-      return;
-    }
-    
-    // Start test on first key press - only if it is a typing key (space, backspace, or character)
-    const isTypingKey = e.key === " " || e.key === "Backspace" || e.key.length === 1;
-    if (currentStatus === "idle" && isTypingKey) {
-      dispatch(startTest());
-    }
-
-    if (e.key === "Backspace") {
-      e.preventDefault();
-      dispatch(backspace());
-      playKeystrokeSound(true, "Backspace");
-      return;
-    }
-
-    if (e.key === " ") {
-      e.preventDefault();
-      
-      const activeWord = wordsRef.current[currentWordIndexRef.current] || "";
-      const isWordCorrect = typedInputRef.current === activeWord;
-      
-      dispatch(typeChar(" "));
-      playKeystrokeSound(isWordCorrect, " ");
-      return;
-    }
-
-    // If single character key
-    if (e.key.length === 1) {
-      e.preventDefault();
-      
-      const activeWord = wordsRef.current[currentWordIndexRef.current] || "";
-      const expectedChar = activeWord[typedInputRef.current.length];
-      const isCorrect = e.key === expectedChar;
-      
-      dispatch(typeChar(e.key));
-      playKeystrokeSound(isCorrect, e.key);
-    }
-  };
-
-  // Input Change Handler for Mobile Soft Keyboards (Gboard / Samsung / iOS Keyboard)
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (statusRef.current === "finished") {
-      return;
-    }
-
-    const newValue = e.target.value;
-    const prevValue = typedInputRef.current;
-
-    // Start test on first input
-    if (statusRef.current === "idle" && newValue.length > 0) {
-      dispatch(startTest());
-    }
-
-    if (newValue.length > prevValue.length) {
-      // New character(s) typed (e.g. Gboard autocomplete or letter insertion)
-      const addedChars = newValue.slice(prevValue.length);
-      for (const char of addedChars) {
-        const activeWord = wordsRef.current[currentWordIndexRef.current] || "";
-        if (char === " ") {
-          const isWordCorrect = prevValue === activeWord;
-          dispatch(typeChar(" "));
-          playKeystrokeSound(isWordCorrect, " ");
-        } else {
-          const expectedChar = activeWord[prevValue.length];
-          const isCorrect = char === expectedChar;
-          dispatch(typeChar(char));
-          playKeystrokeSound(isCorrect, char);
-        }
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Ignore Escape and Tab in typing handler
+      if (e.key === "Escape" || e.key === "Tab") {
+        return;
       }
-    } else if (newValue.length < prevValue.length) {
-      // Backspace pressed on soft keyboard
-      const deleteCount = prevValue.length - newValue.length;
-      for (let i = 0; i < deleteCount; i++) {
+
+      // Ignore modifiers
+      if (e.ctrlKey || e.altKey || e.metaKey || e.key === "Shift") {
+        return;
+      }
+
+      const currentStatus = statusRef.current;
+      if (currentStatus === "finished") {
+        return;
+      }
+      
+      // Start test on first key press
+      const isTypingKey = e.key === " " || e.key === "Backspace" || e.key.length === 1;
+      if (currentStatus === "idle" && isTypingKey) {
+        dispatch(startTest());
+      }
+
+      if (e.key === "Backspace") {
+        e.preventDefault();
         dispatch(backspace());
         playKeystrokeSound(true, "Backspace");
+        return;
       }
-    }
-  };
+
+      if (e.key === " ") {
+        e.preventDefault();
+        
+        const activeWord = wordsRef.current[currentWordIndexRef.current] || "";
+        const isWordCorrect = typedInputRef.current === activeWord;
+        
+        dispatch(typeChar(" "));
+        playKeystrokeSound(isWordCorrect, " ");
+        return;
+      }
+
+      // If single character key
+      if (e.key.length === 1) {
+        e.preventDefault();
+        
+        const activeWord = wordsRef.current[currentWordIndexRef.current] || "";
+        const expectedChar = activeWord[typedInputRef.current.length];
+        const isCorrect = e.key === expectedChar;
+        
+        dispatch(typeChar(e.key));
+        playKeystrokeSound(isCorrect, e.key);
+      }
+    },
+    [dispatch, playKeystrokeSound]
+  );
+
+  // Input Change Handler for Mobile Soft Keyboards (Gboard / Samsung / iOS Keyboard)
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (statusRef.current === "finished") {
+        return;
+      }
+
+      const newValue = e.target.value;
+      const prevValue = typedInputRef.current;
+
+      // Start test on first input
+      if (statusRef.current === "idle" && newValue.length > 0) {
+        dispatch(startTest());
+      }
+
+      if (newValue.length > prevValue.length) {
+        // New character(s) typed (e.g. Gboard autocomplete or letter insertion)
+        const addedChars = newValue.slice(prevValue.length);
+        for (const char of addedChars) {
+          const activeWord = wordsRef.current[currentWordIndexRef.current] || "";
+          if (char === " ") {
+            const isWordCorrect = prevValue === activeWord;
+            dispatch(typeChar(" "));
+            playKeystrokeSound(isWordCorrect, " ");
+          } else {
+            const expectedChar = activeWord[prevValue.length];
+            const isCorrect = char === expectedChar;
+            dispatch(typeChar(char));
+            playKeystrokeSound(isCorrect, char);
+          }
+        }
+      } else if (newValue.length < prevValue.length) {
+        // Backspace pressed on soft keyboard
+        const deleteCount = prevValue.length - newValue.length;
+        for (let i = 0; i < deleteCount; i++) {
+          dispatch(backspace());
+          playKeystrokeSound(true, "Backspace");
+        }
+      }
+    },
+    [dispatch, playKeystrokeSound]
+  );
 
   // Timer & WPM History tracker Interval
   useEffect(() => {
