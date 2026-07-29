@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
   setTheme,
   setSoundType,
-  setSoundVolume,
   toggleErrorSound,
   toggleKeyboard,
   setKeyboardSize,
@@ -15,28 +14,42 @@ import {
 } from "@/store/settingsSlice";
 import { clearHistory } from "@/store/resultsSlice";
 import { X, Volume2, Eye, Trash2, Check } from "lucide-react";
-
 import { useToast } from "@/components/Toast/ToastContext";
+import { useModalFocusTrap } from "@/hooks/useModalFocusTrap";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const THEMES = [
+  { id: "midnight" as const, name: "Midnight", bg: "#0A0D14", accent: "#A277FF", text: "#D1D6E0", dark: true },
+  { id: "carbon" as const, name: "Carbon", bg: "#211F1C", accent: "#E15A1D", text: "#F0E9DC", dark: true },
+  { id: "serika" as const, name: "Serika", bg: "#F2EBDB", accent: "#E2B714", text: "#323437", dark: false },
+  { id: "nord" as const, name: "Nord", bg: "#2E3440", accent: "#88C0D0", text: "#D8DEE9", dark: true },
+  { id: "sakura" as const, name: "Sakura", bg: "#F8F0F0", accent: "#D16075", text: "#442F2F", dark: false },
+  { id: "monokai" as const, name: "Monokai", bg: "#272822", accent: "#A6E22E", text: "#F8F8F2", dark: true },
+];
+
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const dispatch = useDispatch();
   const toast = useToast();
   const settings = useSelector((state: RootState) => state.settings);
-  const modalRef = React.useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   
   const history = useSelector((state: RootState) => state.results.history);
   const localRuns = history ? history.length : 0;
 
   const [visitorCount, setVisitorCount] = useState<number | null>(null);
 
+  // Use reusable focus trap and keyboard shortcut (Escape) hook
+  useModalFocusTrap(isOpen, onClose, modalRef);
+
   // Fetch/Increment global visits count from public Abacus API on open
   useEffect(() => {
     if (!isOpen) return;
+
+    let isMounted = true;
 
     const fetchVisits = async () => {
       try {
@@ -51,7 +64,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         let res = await fetch(url);
         
         // If GET returned 404, the counter hasn't been initialized on the server yet.
-        // Let's create/hit it dynamically!
         if (res.status === 404 && url.includes("/get/")) {
           url = "https://abacus.jasoncameron.dev/hit/clackr-typing-master/global-visits";
           sessionStorage.setItem("clackr-session-visited", "true");
@@ -60,7 +72,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
         if (res.ok) {
           const data = await res.json();
-          if (data && typeof data.value === "number") {
+          if (data && typeof data.value === "number" && isMounted) {
             setVisitorCount(data.value);
             localStorage.setItem("clackr-cached-visits", String(data.value));
             return;
@@ -68,10 +80,11 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         }
         throw new Error("Invalid response status: " + res.status);
       } catch (err) {
-        // Silent fallback: use last cached real count or local runs count
+        if (!isMounted) return;
+        // Silent fallback: use last cached count or local runs count
         const cached = localStorage.getItem("clackr-cached-visits");
         if (cached) {
-          setVisitorCount(parseInt(cached) || 1);
+          setVisitorCount(parseInt(cached, 10) || 1);
         } else {
           setVisitorCount(localRuns + 1);
         }
@@ -79,75 +92,31 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     };
 
     fetchVisits();
-  }, [isOpen, localRuns]);
 
-  React.useEffect(() => {
-    if (!isOpen) return;
-
-    if (modalRef.current) {
-      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      if (focusable.length > 0) {
-        focusable[0].focus();
-      }
-    }
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-        return;
-      }
-
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            last.focus();
-            e.preventDefault();
-          }
-        } else {
-          if (document.activeElement === last) {
-            first.focus();
-            e.preventDefault();
-          }
-        }
-      }
+    return () => {
+      isMounted = false;
     };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, localRuns]);
 
   if (!isOpen) return null;
 
-  const themes = [
-    { id: "carbon" as const, name: "Carbon", bg: "#211F1C", accent: "#E15A1D", text: "#F0E9DC", dark: true },
-    { id: "serika" as const, name: "Serika", bg: "#F2EBDB", accent: "#E2B714", text: "#323437", dark: false },
-    { id: "nord" as const, name: "Nord", bg: "#2E3440", accent: "#88C0D0", text: "#D8DEE9", dark: true },
-    { id: "sakura" as const, name: "Sakura", bg: "#F8F0F0", accent: "#D16075", text: "#442F2F", dark: false },
-    { id: "midnight" as const, name: "Midnight", bg: "#0A0D14", accent: "#A277FF", text: "#D1D6E0", dark: true },
-    { id: "monokai" as const, name: "Monokai", bg: "#272822", accent: "#A6E22E", text: "#F8F8F2", dark: true },
-  ];
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-modal-title"
+    >
       <div 
         ref={modalRef}
-        className="bg-clackr-bg border border-clackr-muted/20 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-scaleIn"
-        style={{ backgroundColor: "var(--bg-color)", color: "var(--fg-color)" }}
+        className="bg-clackr-bg border border-clackr-muted/20 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-scaleIn text-clackr-fg font-sans"
       >
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-clackr-muted/10">
           <div className="flex flex-col">
-            <h2 className="font-mono text-lg font-bold text-clackr-fg">clackr settings</h2>
+            <h2 id="settings-modal-title" className="font-mono text-lg font-bold text-clackr-fg">
+              clackr settings
+            </h2>
             <div className="flex items-center gap-1.5 mt-0.5 select-none font-mono">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -159,6 +128,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close settings modal"
             className="p-1.5 rounded-lg hover:bg-clackr-muted/10 text-clackr-muted hover:text-clackr-fg transition-colors"
@@ -176,9 +146,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <span>●</span> Presets & Visual Theme
             </h3>
             <div className="grid grid-cols-2 gap-3 mt-1">
-              {themes.map((theme) => (
+              {THEMES.map((theme) => (
                 <button
                   key={theme.id}
+                  type="button"
                   onClick={(event) => {
                     const x = event.clientX;
                     const y = event.clientY;
@@ -226,40 +197,40 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="flex flex-col gap-3 font-mono text-xs text-clackr-muted">
               {/* Sound Type Selection */}
               <div className="flex items-center justify-between">
-                    <span>Switch Sound Style</span>
-                    <div className="flex gap-1">
-                      {(["clack", "mechanical", "bubble"] as const).map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => dispatch(setSoundType(t))}
-                          className={`px-2 py-1 rounded text-[10px] transition-all border ${
-                            settings.soundType === t
-                              ? "text-clackr-fg border-clackr-accent/30 bg-clackr-accent/5 font-semibold"
-                              : "text-clackr-muted border-clackr-muted/20"
-                          }`}
-                        >
-                          {t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-
-
-                  {/* Error beep toggle */}
-                  <div className="flex items-center justify-between">
-                    <span>Play Beep on Error</span>
+                <span>Switch Sound Style</span>
+                <div className="flex gap-1">
+                  {(["clack", "mechanical", "bubble"] as const).map((t) => (
                     <button
-                      onClick={() => dispatch(toggleErrorSound())}
-                      className={`px-3 py-1 rounded transition-all border ${
-                        settings.errorSoundEnabled
+                      key={t}
+                      type="button"
+                      onClick={() => dispatch(setSoundType(t))}
+                      className={`px-2 py-1 rounded text-[10px] transition-all border ${
+                        settings.soundType === t
                           ? "text-clackr-fg border-clackr-accent/30 bg-clackr-accent/5 font-semibold"
                           : "text-clackr-muted border-clackr-muted/20"
                       }`}
                     >
-                      {settings.errorSoundEnabled ? "On" : "Off"}
+                      {t}
                     </button>
-                  </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Error beep toggle */}
+              <div className="flex items-center justify-between">
+                <span>Play Beep on Error</span>
+                <button
+                  type="button"
+                  onClick={() => dispatch(toggleErrorSound())}
+                  className={`px-3 py-1 rounded transition-all border ${
+                    settings.errorSoundEnabled
+                      ? "text-clackr-fg border-clackr-accent/30 bg-clackr-accent/5 font-semibold"
+                      : "text-clackr-muted border-clackr-muted/20"
+                  }`}
+                >
+                  {settings.errorSoundEnabled ? "On" : "Off"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -274,6 +245,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <div className="flex items-center justify-between">
                 <span>On-screen Virtual Keyboard</span>
                 <button
+                  type="button"
                   onClick={() => dispatch(toggleKeyboard())}
                   className={`px-3 py-1 rounded transition-all border ${
                     settings.keyboardEnabled
@@ -293,6 +265,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     {(["small", "medium", "large"] as const).map((sz) => (
                       <button
                         key={sz}
+                        type="button"
                         onClick={() => dispatch(setKeyboardSize(sz))}
                         className={`px-2 py-1 rounded text-[10px] transition-all border capitalize ${
                           (settings.keyboardSize || "medium") === sz
@@ -312,6 +285,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <span>Typing Font</span>
                 <div className="flex gap-1">
                   <button
+                    type="button"
                     onClick={() => dispatch(setFontFamily("font-mono"))}
                     className={`px-2 py-1 rounded text-[10px] transition-all border ${
                       settings.fontFamily === "font-mono"
@@ -322,6 +296,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     Mono (JetBrains)
                   </button>
                   <button
+                    type="button"
                     onClick={() => dispatch(setFontFamily("font-sans"))}
                     className={`px-2 py-1 rounded text-[10px] transition-all border ${
                       settings.fontFamily === "font-sans"
@@ -338,6 +313,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <div className="flex items-center justify-between">
                 <span>Confetti on Completion</span>
                 <button
+                  type="button"
                   onClick={() => dispatch(toggleConfetti())}
                   className={`px-3 py-1 rounded transition-all border ${
                     settings.confettiEnabled
@@ -359,6 +335,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="flex items-center justify-between text-xs font-mono text-clackr-muted">
               <span>Wipe Personal Best & History</span>
               <button
+                type="button"
                 onClick={() => {
                   toast.confirm({
                     title: "Wipe Personal Best & History",
