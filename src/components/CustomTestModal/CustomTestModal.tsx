@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { setCustomTestSettings, initTest } from "@/store/testSlice";
@@ -64,9 +64,7 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
     }
   }, [isOpen]); // Only sync when modal opens to prevent overwriting active user edits
 
-  if (!isOpen) return null;
-
-  const handleStartTest = () => {
+  const handleStartTest = useCallback(() => {
     const finalDuration = selectedPreset === "custom" 
       ? (typeof customDuration === "number" ? customDuration : 0)
       : duration;
@@ -107,7 +105,9 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
 
     // 4. Dismiss modal
     onClose();
-  };
+  }, [selectedPreset, customDuration, duration, difficulty, punctuation, numbers, capitals, dispatch, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div 
@@ -132,6 +132,7 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
             </span>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="p-1.5 rounded-lg text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all duration-200"
             aria-label="Close custom test setup modal"
@@ -151,11 +152,12 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
             </label>
             
             {/* Quick Time Presets */}
-            <div className="grid grid-cols-4 gap-1.5 select-none">
+            <div className="grid grid-cols-4 gap-1.5 select-none" role="toolbar" aria-label="Duration preset options">
               {PRESET_DURATIONS.map((p) => (
                 <button
                   key={p.value}
                   type="button"
+                  aria-pressed={selectedPreset === p.value}
                   onClick={() => {
                     setSelectedPreset(p.value);
                     setDuration(p.value);
@@ -172,6 +174,7 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
               ))}
               <button
                 type="button"
+                aria-pressed={selectedPreset === "custom"}
                 onClick={() => {
                   setSelectedPreset("custom");
                   if (typeof customDuration === "number" && customDuration > 0) {
@@ -230,11 +233,12 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
               <span>difficulty level</span>
               <HelpCircle className="w-3 h-3 text-clackr-fg/50" />
             </label>
-            <div className="flex gap-2 select-none">
+            <div className="flex gap-2 select-none" role="toolbar" aria-label="Difficulty level selection">
               {(["easy", "hard"] as const).map((diff) => (
                 <button
                   key={diff}
                   type="button"
+                  aria-pressed={difficulty === diff}
                   onClick={() => {
                     setDifficulty(diff);
                   }}
@@ -255,27 +259,43 @@ export default function CustomTestModal({ isOpen, onClose }: CustomTestModalProp
             <label className="text-[10px] text-clackr-fg/90 uppercase font-bold tracking-wider">
               text contents modifiers
             </label>
-            <div className="grid grid-cols-3 gap-2.5">
-              {[
-                { id: "punctuation", label: "@ punctuation", val: punctuation, set: setPunctuation },
-                { id: "numbers", label: "# numbers", val: numbers, set: setNumbers },
-                { id: "capitals", label: "Aa capitals", val: capitals, set: setCapitals },
-              ].map((mod) => (
-                <button
-                  key={mod.id}
-                  type="button"
-                  onClick={() => {
-                    mod.set(!mod.val);
-                  }}
-                  className={`py-2 text-[10px] border rounded-xl transition-all ${
-                    mod.val
-                      ? "text-clackr-accent border-clackr-accent/40 bg-clackr-accent/15 font-extrabold shadow-sm"
-                      : "text-clackr-fg/80 border-clackr-muted/20 hover:text-clackr-fg hover:bg-clackr-fg/10 font-semibold"
-                  }`}
-                >
-                  {mod.label}
-                </button>
-              ))}
+            <div className="grid grid-cols-3 gap-2.5" role="toolbar" aria-label="Text content modifiers">
+              <button
+                type="button"
+                aria-pressed={punctuation}
+                onClick={() => setPunctuation((prev) => !prev)}
+                className={`py-2 text-[10px] border rounded-xl transition-all ${
+                  punctuation
+                    ? "text-clackr-accent border-clackr-accent/40 bg-clackr-accent/15 font-extrabold shadow-sm"
+                    : "text-clackr-fg/80 border-clackr-muted/20 hover:text-clackr-fg hover:bg-clackr-fg/10 font-semibold"
+                }`}
+              >
+                @ punctuation
+              </button>
+              <button
+                type="button"
+                aria-pressed={numbers}
+                onClick={() => setNumbers((prev) => !prev)}
+                className={`py-2 text-[10px] border rounded-xl transition-all ${
+                  numbers
+                    ? "text-clackr-accent border-clackr-accent/40 bg-clackr-accent/15 font-extrabold shadow-sm"
+                    : "text-clackr-fg/80 border-clackr-muted/20 hover:text-clackr-fg hover:bg-clackr-fg/10 font-semibold"
+                }`}
+              >
+                # numbers
+              </button>
+              <button
+                type="button"
+                aria-pressed={capitals}
+                onClick={() => setCapitals((prev) => !prev)}
+                className={`py-2 text-[10px] border rounded-xl transition-all ${
+                  capitals
+                    ? "text-clackr-accent border-clackr-accent/40 bg-clackr-accent/15 font-extrabold shadow-sm"
+                    : "text-clackr-fg/80 border-clackr-muted/20 hover:text-clackr-fg hover:bg-clackr-fg/10 font-semibold"
+                }`}
+              >
+                Aa capitals
+              </button>
             </div>
           </div>
 
