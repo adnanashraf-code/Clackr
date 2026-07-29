@@ -13,7 +13,7 @@ import {
 import { setTheme, toggleSound, SettingsState } from "@/store/settingsSlice";
 import { Palette, Clock, Volume2, VolumeX } from "lucide-react";
 
-const THEMES: SettingsState["theme"][] = ["carbon", "serika", "nord", "sakura", "midnight", "monokai"];
+const THEMES: SettingsState["theme"][] = ["midnight", "carbon", "serika", "nord", "sakura", "monokai"];
 
 interface TestConfigProps {
   onOpenCustomTest?: () => void;

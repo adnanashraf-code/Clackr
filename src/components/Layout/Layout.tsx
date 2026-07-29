@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Keyboard, Settings, History, Menu, Clock, Volume2, VolumeX, Palette } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -25,25 +25,66 @@ interface LayoutProps {
   scrollable?: boolean;
 }
 
-export default function Layout({ children, onOpenSettings, onOpenHistory, onOpenCustomTest, onClickLogo, scrollable = false }: LayoutProps) {
+const THEMES: Array<SettingsState["theme"]> = [
+  "midnight",
+  "carbon",
+  "serika",
+  "nord",
+  "sakura",
+  "monokai",
+];
+
+export default function Layout({
+  children,
+  onOpenSettings,
+  onOpenHistory,
+  onOpenCustomTest,
+  onClickLogo,
+  scrollable = false,
+}: LayoutProps) {
   const dispatch = useDispatch();
   const { keyboardEnabled, soundEnabled } = useSelector((state: RootState) => state.settings);
-  const { highScore } = useSelector((state: RootState) => state.results);
   const { status, mode, duration, wordCount, difficulty, punctuation, numbers, capitals } = useSelector(
     (state: RootState) => state.test
   );
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const activeTheme = useSelector((state: RootState) => state.settings.theme);
-  const [prevTheme, setPrevTheme] = React.useState(activeTheme);
-  const [transitionOverlay, setTransitionOverlay] = React.useState<{
+  const [prevTheme, setPrevTheme] = useState(activeTheme);
+  const [transitionOverlay, setTransitionOverlay] = useState<{
     oldTheme: string;
     x: number;
     y: number;
   } | null>(null);
 
+  // Close mobile dropdown menu on click outside or Escape key press
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
   // Monitor theme change state to run a smooth custom reveal overlay fallback when native SVT is not supported
-  React.useEffect(() => {
+  useEffect(() => {
     if (activeTheme !== prevTheme) {
       setPrevTheme(activeTheme);
       
@@ -83,6 +124,13 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
           onClick={onClickLogo}
           className="flex items-center gap-2 cursor-pointer select-none text-clackr-muted hover:text-clackr-fg transition-colors duration-200"
           title="Start a new typing test"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              onClickLogo?.();
+            }
+          }}
         >
           <Keyboard className="w-5 h-5 text-clackr-accent" />
           <span className="font-mono text-xl font-bold tracking-tight text-clackr-fg leading-none">
@@ -110,6 +158,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
           {/* Desktop Toolbar (Hidden on Mobile) */}
           <div className="hidden md:flex items-center gap-0.5 bg-clackr-fg/[0.03] border border-clackr-muted/10 p-1 rounded-xl shadow-sm">
             <button
+              type="button"
               onClick={() => dispatch(toggleKeyboard())}
               title="Toggle Keyboard View (K)"
               aria-label="Toggle keyboard view"
@@ -123,6 +172,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
             </button>
 
             <button
+              type="button"
               onClick={onOpenHistory}
               title="View History"
               aria-label="View typing test history"
@@ -132,6 +182,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
             </button>
 
             <button
+              type="button"
               onClick={onOpenSettings}
               title="Settings (Esc)"
               aria-label="Open settings menu"
@@ -145,10 +196,10 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
 
           {/* 1. Theme Button Box */}
           <button
+            type="button"
             onClick={(e) => {
-              const themes: Array<SettingsState["theme"]> = ["midnight", "carbon", "serika", "nord", "sakura", "monokai"];
-              const currentIdx = themes.indexOf(activeTheme);
-              const nextTheme = themes[(currentIdx + 1) % themes.length];
+              const currentIdx = THEMES.indexOf(activeTheme);
+              const nextTheme = THEMES[(currentIdx + 1) % THEMES.length];
 
               const rect = e.currentTarget.getBoundingClientRect();
               const x = rect.left + rect.width / 2;
@@ -174,6 +225,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
 
           {/* 2. Time Selector Button Box */}
           <button
+            type="button"
             onClick={() => {
               if (mode !== "time") {
                 dispatch(setMode("time"));
@@ -193,6 +245,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
 
           {/* 3. Sound Toggle Button Box */}
           <button
+            type="button"
             onClick={() => dispatch(toggleSound())}
             title={soundEnabled ? "Mute Sound" : "Enable Sound"}
             aria-label="Toggle sound"
@@ -207,8 +260,11 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
 
           {/* 4. Hamburger Menu Button Box */}
           <button
+            type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label="Toggle navigation menu"
+            aria-expanded={isMenuOpen}
+            aria-haspopup="true"
             className={`md:hidden p-2 rounded-xl border transition-all shadow-sm active:scale-95 ${
               isMenuOpen
                 ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10"
@@ -220,24 +276,32 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
 
           {/* Mobile Quick Configuration & Menu Dropdown (Visible on Mobile only) */}
           {isMenuOpen && (
-            <div className="absolute right-0 top-full mt-2.5 w-60 bg-clackr-bg border border-clackr-muted/20 rounded-xl shadow-xl z-50 p-3 md:hidden overflow-y-auto max-h-[75vh] flex flex-col gap-3.5 font-mono text-[10px]" style={{ backgroundColor: "var(--bg-color)" }}>
+            <div 
+              ref={menuRef}
+              className="absolute right-0 top-full mt-2.5 w-60 bg-clackr-bg border border-clackr-muted/20 rounded-xl shadow-xl z-50 p-3 md:hidden overflow-y-auto max-h-[75vh] flex flex-col gap-3.5 font-mono text-[10px] text-clackr-fg"
+              role="menu"
+              aria-label="Mobile navigation configuration menu"
+            >
               {/* Modifiers */}
               <div className="flex flex-col gap-1 border-b border-clackr-muted/10 pb-2.5">
                 <span className="text-clackr-accent uppercase tracking-wider text-[8px] font-bold">modifiers</span>
                 <div className="flex flex-wrap gap-1 mt-1">
                   <button
+                    type="button"
                     onClick={() => dispatch(togglePunctuation())}
                     className={`px-2 py-0.5 rounded border text-[9px] ${punctuation ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                   >
                     @ punctuation
                   </button>
                   <button
+                    type="button"
                     onClick={() => dispatch(toggleNumbers())}
                     className={`px-2 py-0.5 rounded border text-[9px] ${numbers ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                   >
                     № numbers
                   </button>
                   <button
+                    type="button"
                     onClick={() => dispatch(toggleCapitals())}
                     className={`px-2 py-0.5 rounded border text-[9px] ${capitals ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                   >
@@ -253,6 +317,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
                   {(["easy", "hard"] as const).map((diff) => (
                     <button
                       key={diff}
+                      type="button"
                       onClick={() => dispatch(setDifficulty(diff))}
                       className={`flex-1 px-2 py-0.5 rounded border uppercase text-[9px] ${difficulty === diff ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                     >
@@ -269,6 +334,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
                   {(["time", "words", "quote", "zen", "code"] as const).map((m) => (
                     <button
                       key={m}
+                      type="button"
                       onClick={() => dispatch(setMode(m))}
                       className={`px-2 py-0.5 rounded border uppercase text-[9px] ${mode === m ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                     >
@@ -289,6 +355,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
                       [15, 30, 60, 120].map((d) => (
                         <button
                           key={d}
+                          type="button"
                           onClick={() => dispatch(setDuration(d))}
                           className={`px-2 py-0.5 rounded border text-[9px] ${duration === d ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                         >
@@ -299,6 +366,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
                       [10, 25, 50, 100].map((w) => (
                         <button
                           key={w}
+                          type="button"
                           onClick={() => dispatch(setWordCount(w))}
                           className={`px-2 py-0.5 rounded border text-[9px] ${wordCount === w ? "text-clackr-accent border-clackr-accent/30 bg-clackr-accent/10 font-bold" : "text-clackr-muted border-clackr-muted/10"}`}
                         >
@@ -315,6 +383,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
                 <span className="text-clackr-accent uppercase tracking-wider text-[8px] font-bold">navigation</span>
                 <div className="flex flex-col gap-0.5 mt-1">
                   <button
+                    type="button"
                     onClick={() => {
                       onOpenHistory();
                       setIsMenuOpen(false);
@@ -325,6 +394,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
                     <span>View History</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       onOpenCustomTest?.();
                       setIsMenuOpen(false);
@@ -335,6 +405,7 @@ export default function Layout({ children, onOpenSettings, onOpenHistory, onOpen
                     <span>Custom Test Setup</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       onOpenSettings();
                       setIsMenuOpen(false);
