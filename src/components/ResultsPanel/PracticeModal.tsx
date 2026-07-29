@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X, Play, RotateCcw } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { initTest, setMode, setWordCount } from "@/store/testSlice";
@@ -50,9 +50,7 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
     return Math.max(0, Math.round(100 - currentWords.length * 1.8));
   }, [currentWords.length]);
 
-  if (!isOpen) return null;
-
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (source === "this") {
       toast.info("Cannot reset current test results. Switch to 'all-time' to reset cumulative history.");
     } else {
@@ -71,9 +69,9 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
         },
       });
     }
-  };
+  }, [source, toast]);
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     if (currentWords.length === 0) {
       toast.warning("No words to practice!");
       return;
@@ -93,11 +91,13 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
     dispatch(setMode("words"));
     dispatch(setWordCount(practiceList.length));
     onClose();
-  };
+  }, [currentWords, dispatch, onClose, toast]);
+
+  if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-labelledby="practice-modal-title"
@@ -125,9 +125,10 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
           <span className="text-[10px] text-clackr-accent font-mono uppercase tracking-wider select-none font-bold">
             Source
           </span>
-          <div className="flex gap-2">
+          <div className="flex gap-2" role="toolbar" aria-label="Word source options">
             <button 
               type="button"
+              aria-pressed={source === "this"}
               onClick={() => setSource("this")} 
               className={`py-1.5 px-4 rounded-lg border font-mono text-xs transition-all ${
                 source === "this" 
@@ -139,6 +140,7 @@ export default function PracticeModal({ isOpen, onClose, thisTestWrongWords }: P
             </button>
             <button 
               type="button"
+              aria-pressed={source === "allTime"}
               onClick={() => setSource("allTime")} 
               className={`py-1.5 px-4 rounded-lg border font-mono text-xs transition-all ${
                 source === "allTime" 

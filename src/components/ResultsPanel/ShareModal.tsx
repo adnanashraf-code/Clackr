@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useRef, useMemo } from "react";
+import React, { useRef, useMemo, useCallback } from "react";
 import { X, Copy, Download, Share2 } from "lucide-react";
 import { useToast } from "@/components/Toast/ToastContext";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
 import { useModalFocusTrap } from "@/hooks/useModalFocusTrap";
 
 interface ShareModalProps {
@@ -55,11 +54,11 @@ export default function ShareModal({
     });
   }, []);
 
-  if (!isOpen) return null;
+  const shareText = useMemo(() => {
+    return `clackr typing speed: ${finalWpm} WPM | Accuracy: ${accuracy}% | Raw: ${finalRaw} WPM | Mode: ${mode} ${mode === "time" ? `${duration}s` : mode === "words" ? wordCount : ""}`;
+  }, [finalWpm, accuracy, finalRaw, mode, duration, wordCount]);
 
-  const shareText = `clackr typing speed: ${finalWpm} WPM | Accuracy: ${accuracy}% | Raw: ${finalRaw} WPM | Mode: ${mode} ${mode === "time" ? duration : mode === "words" ? wordCount : ""}`;
-
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(shareText);
       toast.success("Results copied to clipboard!");
@@ -67,9 +66,9 @@ export default function ShareModal({
       console.error("Failed to copy text: ", err);
       toast.error("Failed to copy results.");
     }
-  };
+  }, [shareText, toast]);
 
-  const generateCanvasBlob = (): Promise<Blob | null> => {
+  const generateCanvasBlob = useCallback((): Promise<Blob | null> => {
     return new Promise((resolve) => {
       const canvas = document.createElement("canvas");
       canvas.width = 800;
@@ -181,9 +180,9 @@ export default function ShareModal({
 
       canvas.toBlob((blob) => resolve(blob), "image/png");
     });
-  };
+  }, [formattedDate, finalWpm, accuracy, mode, duration, wordCount, chartData, finalRaw, consistency, timeTaken, backspaceCount]);
 
-  const handleDownload = async () => {
+  const handleDownload = useCallback(async () => {
     const blob = await generateCanvasBlob();
     if (!blob) return;
     const url = URL.createObjectURL(blob);
@@ -195,13 +194,13 @@ export default function ShareModal({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     toast.success("Results score card downloaded!");
-  };
+  }, [generateCanvasBlob, finalWpm, toast]);
 
   /**
    * Opens Twitter/X post composer with pre-filled test result statistics
    * and the clackr homepage URL for social card rendering (og.png).
    */
-  const handlePost = () => {
+  const handlePost = useCallback(() => {
     const testDurationText = mode === "time" ? `${duration} sec` : `${timeTaken.toFixed(0)}s`;
     const tweetText = `Just hit ${finalWpm} WPM with ${accuracy}% accuracy in a ${testDurationText} test.\n\nThink you can beat me? Try clackr, a minimal distraction-free typing test.`;
     const shareUrl = "https://clackr-plum.vercel.app/share";
@@ -209,18 +208,20 @@ export default function ShareModal({
     const twitterUrl = `https://x.com/intent/post?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(twitterUrl, "_blank", "noopener,noreferrer");
     toast.success("Opening X (Twitter) to post!");
-  };
+  }, [mode, duration, timeTaken, finalWpm, accuracy, toast]);
+
+  if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-labelledby="share-modal-title"
     >
       <div 
         ref={modalRef} 
-        className="relative w-full max-w-3xl bg-clackr-bg border border-clackr-muted/20 rounded-2xl p-6 shadow-2xl animate-scaleUp text-clackr-fg"
+        className="relative w-full max-w-3xl bg-clackr-bg border border-clackr-muted/20 rounded-2xl p-6 shadow-2xl animate-scaleUp text-clackr-fg font-mono"
       >
         <button 
           type="button"
@@ -231,7 +232,7 @@ export default function ShareModal({
           <X className="w-5 h-5" />
         </button>
 
-        <h2 id="share-modal-title" className="text-clackr-fg font-mono text-xl font-bold mb-6">
+        <h2 id="share-modal-title" className="text-clackr-fg font-mono text-xl font-bold mb-6 select-none">
           Share your result
         </h2>
 
@@ -248,95 +249,75 @@ export default function ShareModal({
 
           {/* Main Block */}
           <div className="grid grid-cols-[1.5fr_3fr] gap-6 items-center">
-            
-            {/* Large Stats Left */}
-            <div className="flex flex-col gap-4">
+            {/* Stats Left */}
+            <div className="flex flex-col gap-3">
               <div className="flex flex-col">
-                <span className="text-clackr-muted text-[10px] uppercase font-mono tracking-wider">wpm</span>
-                <span className="font-mono text-5xl font-extrabold text-clackr-accent mt-0.5 leading-none">
-                  {finalWpm}
-                </span>
+                <span className="text-xs text-clackr-muted uppercase">wpm</span>
+                <span className="text-6xl font-extrabold text-clackr-accent leading-none mt-1">{finalWpm}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-clackr-muted text-[10px] uppercase font-mono tracking-wider">accuracy</span>
-                <span className="font-mono text-2xl font-bold text-clackr-fg mt-0.5 leading-none">
-                  {accuracy}%
-                </span>
+                <span className="text-xs text-clackr-muted uppercase">accuracy</span>
+                <span className="text-3xl font-bold text-clackr-fg leading-none mt-1">{accuracy}%</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-clackr-muted text-[10px] uppercase font-mono tracking-wider">test type</span>
-                <span className="font-mono text-sm font-bold text-clackr-accent mt-0.5 capitalize leading-none">
+                <span className="text-xs text-clackr-muted uppercase">test type</span>
+                <span className="text-xs font-bold text-clackr-accent uppercase mt-1">
                   {mode} {mode === "time" ? duration : mode === "words" ? wordCount : ""}
                 </span>
               </div>
             </div>
 
-            {/* Static Simple Graph Right */}
-            <div className="w-full h-44 bg-clackr-fg/[0.02] border border-clackr-muted/5 rounded-lg p-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <Line 
-                    type="monotone" 
-                    dataKey="wpm" 
-                    stroke="var(--accent)" 
-                    strokeWidth={2} 
-                    dot={{ stroke: "var(--accent)", strokeWidth: 1, r: 1.5 }} 
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-          </div>
-
-          {/* Bottom Row */}
-          <div className="grid grid-cols-4 gap-4 text-left border-t border-clackr-muted/10 pt-4 text-xs font-mono">
-            <div className="flex flex-col">
-              <span className="text-clackr-muted uppercase text-[10px] tracking-wider">raw</span>
-              <span className="text-clackr-fg font-bold text-base mt-0.5">{finalRaw}</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-clackr-muted uppercase text-[10px] tracking-wider">consistency</span>
-              <span className="text-clackr-fg font-bold text-base mt-0.5">{consistency}%</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-clackr-muted uppercase text-[10px] tracking-wider">time</span>
-              <span className="text-clackr-fg font-bold text-base mt-0.5">{timeTaken.toFixed(0)}s</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-clackr-muted uppercase text-[10px] tracking-wider">fixes</span>
-              <span className="text-clackr-fg font-bold text-base mt-0.5">{backspaceCount}</span>
+            {/* Quick Summary Box */}
+            <div className="p-4 rounded-xl border border-clackr-muted/10 bg-clackr-fg/[0.01] flex flex-col gap-3">
+              <div className="grid grid-cols-4 gap-2 text-center">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-clackr-muted uppercase">raw</span>
+                  <span className="text-sm font-bold text-clackr-fg">{finalRaw}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-clackr-muted uppercase">consistency</span>
+                  <span className="text-sm font-bold text-clackr-fg">{consistency}%</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-clackr-muted uppercase">time</span>
+                  <span className="text-sm font-bold text-clackr-fg">{timeTaken.toFixed(0)}s</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-clackr-muted uppercase">fixes</span>
+                  <span className="text-sm font-bold text-clackr-fg">{backspaceCount}</span>
+                </div>
+              </div>
             </div>
           </div>
-
         </div>
 
-        {/* Action Controls */}
-        <div className="flex justify-center gap-8 mt-6 text-clackr-muted font-mono text-sm">
+        {/* Action Buttons Footer */}
+        <div className="flex flex-wrap items-center justify-end gap-3 mt-6 pt-4 border-t border-clackr-muted/10 select-none" role="toolbar" aria-label="Share modal action options">
           <button 
             type="button"
-            onClick={handleCopy} 
-            className="flex items-center gap-2 hover:text-clackr-fg transition-colors duration-150 py-2 px-4 rounded-lg hover:bg-clackr-fg/5"
+            onClick={handleCopy}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-clackr-muted/20 hover:border-clackr-fg text-xs font-semibold text-clackr-fg transition-all hover:bg-clackr-fg/5"
           >
-            <Copy className="w-4 h-4" />
-            <span>Copy</span>
-          </button>
-          
-          <button 
-            type="button"
-            onClick={handleDownload} 
-            className="flex items-center gap-2 hover:text-clackr-fg transition-colors duration-150 py-2 px-4 rounded-lg hover:bg-clackr-fg/5"
-          >
-            <Download className="w-4 h-4" />
-            <span>Download</span>
+            <Copy className="w-3.5 h-3.5" />
+            <span>Copy Text</span>
           </button>
 
           <button 
             type="button"
-            onClick={handlePost} 
-            className="flex items-center gap-2 hover:text-clackr-fg transition-colors duration-150 py-2 px-4 rounded-lg hover:bg-clackr-fg/5"
+            onClick={handleDownload}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-clackr-muted/20 hover:border-clackr-fg text-xs font-semibold text-clackr-fg transition-all hover:bg-clackr-fg/5"
           >
-            <Share2 className="w-4 h-4" />
-            <span>Post</span>
+            <Download className="w-3.5 h-3.5" />
+            <span>Download Image</span>
+          </button>
+
+          <button 
+            type="button"
+            onClick={handlePost}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-clackr-accent text-clackr-bg text-xs font-extrabold shadow-md shadow-clackr-accent/20 hover:brightness-110 active:scale-[0.98] transition-all"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>Post to X</span>
           </button>
         </div>
 

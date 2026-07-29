@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store/store";
 import { addResult } from "@/store/resultsSlice";
@@ -165,7 +165,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
   const isNewHighScore = finalWpm > 0 && finalWpm >= highScore;
 
   // Handlers for JSON/CSV downloads
-  const handleDownloadJSON = () => {
+  const handleDownloadJSON = useCallback(() => {
     const statsObj = {
       wpm: finalWpm,
       raw: finalRaw,
@@ -193,9 +193,9 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     setIsDownloadDropdownOpen(false);
-  };
+  }, [finalWpm, finalRaw, accuracy, consistency, timeTaken, backspaceCount, mode, charStats]);
 
-  const handleDownloadCSV = () => {
+  const handleDownloadCSV = useCallback(() => {
     const headers = "WPM,Raw,Accuracy,Consistency,Time,Fixes,Correct,Incorrect,Extra,Missed,Mode,Date\n";
     const row = `${finalWpm},${finalRaw},${accuracy}%,${consistency}%,${timeTaken.toFixed(1)}s,${backspaceCount},${charStats.correct},${charStats.incorrect},${charStats.extra},${charStats.missed},${mode},"${new Date().toLocaleString()}"\n`;
     
@@ -209,7 +209,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     setIsDownloadDropdownOpen(false);
-  };
+  }, [finalWpm, finalRaw, accuracy, consistency, timeTaken, backspaceCount, charStats, mode]);
 
   return (
     <div className="w-full max-w-5xl mx-auto flex flex-col gap-5 transition-opacity duration-300 animate-fadeIn py-3 px-4 flex-1 justify-center">
@@ -371,7 +371,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
       </div>
 
       {/* Bottom Section: Action icons and labels */}
-      <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 pt-3 text-clackr-fg/70 text-sm font-mono mt-1 relative select-none">
+      <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 pt-3 text-clackr-fg/70 text-sm font-mono mt-1 relative select-none" role="toolbar" aria-label="Results actions toolbar">
         
         <button 
           type="button"
@@ -424,6 +424,7 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
             onClick={() => setIsDownloadDropdownOpen((prev) => !prev)}
             aria-expanded={isDownloadDropdownOpen}
             aria-haspopup="true"
+            aria-label="Download test statistics options"
             className="flex items-center gap-2 hover:text-clackr-accent transition-colors duration-150 py-1"
           >
             <Download className="w-4 h-4" />
@@ -431,7 +432,11 @@ export default function ResultsPanel({ onRestart, onNextTest }: ResultsPanelProp
           </button>
           
           {isDownloadDropdownOpen && (
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 min-w-[120px] bg-clackr-bg border border-clackr-muted/20 rounded-lg shadow-xl p-1.5 flex flex-col gap-1 text-xs text-clackr-fg select-none">
+            <div 
+              className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 min-w-[120px] bg-clackr-bg border border-clackr-muted/20 rounded-lg shadow-xl p-1.5 flex flex-col gap-1 text-xs text-clackr-fg select-none"
+              role="menu"
+              aria-label="Download format options"
+            >
               <button 
                 type="button"
                 onClick={handleDownloadJSON}

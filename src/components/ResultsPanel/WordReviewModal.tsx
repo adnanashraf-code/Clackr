@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import { X, Download } from "lucide-react";
 import { useModalFocusTrap } from "@/hooks/useModalFocusTrap";
 
@@ -43,9 +43,7 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
     return filter === "all" ? processedWords : processedWords.filter((w) => !w.isCorrect);
   }, [filter, processedWords]);
 
-  if (!isOpen) return null;
-
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     // Generate text report
     let report = `CLACKR WORD REVIEW REPORT\n`;
     report += `-------------------------\n`;
@@ -67,11 +65,13 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  };
+  }, [correctCount, wrongCount, notReachedCount, processedWords]);
+
+  if (!isOpen) return null;
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-labelledby="word-review-title"
@@ -120,9 +120,10 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
             <span className="text-clackr-correct">{correctCount} correct</span>
             <span className="text-clackr-error">{wrongCount} wrong</span>
           </span>
-          <div className="flex gap-1.5 ml-auto">
+          <div className="flex gap-1.5 ml-auto" role="toolbar" aria-label="Word review filter options">
             <button 
               type="button"
+              aria-pressed={filter === "all"}
               onClick={() => setFilter("all")} 
               className={`py-1 px-3.5 rounded-lg border transition-all text-xs ${
                 filter === "all" 
@@ -134,6 +135,7 @@ export default function WordReviewModal({ isOpen, onClose, words, typedWords }: 
             </button>
             <button 
               type="button"
+              aria-pressed={filter === "wrong"}
               onClick={() => setFilter("wrong")} 
               className={`py-1 px-3.5 rounded-lg border transition-all text-xs ${
                 filter === "wrong" 
