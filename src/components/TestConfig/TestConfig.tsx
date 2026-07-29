@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { flushSync } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import {
@@ -37,7 +40,6 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
     if (typeof document !== "undefined" && (document as any).startViewTransition) {
       document.documentElement.style.setProperty("--click-x", `${e.clientX}px`);
       document.documentElement.style.setProperty("--click-y", `${e.clientY}px`);
-      const { flushSync } = require("react-dom");
       (document as any).startViewTransition(() => {
         flushSync(() => {
           dispatch(setTheme(nextTheme));
@@ -50,6 +52,8 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
   return (
     <div
+      role="toolbar"
+      aria-label="Typing test configuration toolbar"
       className={`flex flex-nowrap items-center justify-center gap-1.5 md:gap-2 xl:gap-2.5 font-mono text-xs md:text-xs xl:text-[13px] 2xl:text-[14px] text-clackr-muted transition-all duration-300 w-max max-w-full mx-auto z-20 overflow-x-auto no-scrollbar py-1 px-1 whitespace-nowrap ${
         isTyping ? "opacity-0 pointer-events-none -translate-y-2 scale-95" : "opacity-100"
       }`}
@@ -57,7 +61,10 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
       {/* Group 1: Modifiers (Punctuation, Numbers, Capitals) */}
       <div className="flex items-center bg-clackr-fg/[0.03] border border-clackr-muted/5 rounded-lg p-0.5 shadow-inner gap-0.5 flex-shrink-0">
         <button
+          type="button"
           onClick={() => dispatch(togglePunctuation())}
+          aria-pressed={punctuation}
+          aria-label="Toggle punctuation"
           className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
             punctuation
               ? "text-clackr-accent font-bold bg-clackr-accent/15 shadow-sm"
@@ -68,7 +75,10 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
         </button>
 
         <button
+          type="button"
           onClick={() => dispatch(toggleNumbers())}
+          aria-pressed={numbers}
+          aria-label="Toggle numbers"
           className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
             numbers
               ? "text-clackr-accent font-bold bg-clackr-accent/15 shadow-sm"
@@ -79,7 +89,10 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
         </button>
 
         <button
+          type="button"
           onClick={() => dispatch(toggleCapitals())}
+          aria-pressed={capitals}
+          aria-label="Toggle capitals"
           className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
             capitals
               ? "text-clackr-accent font-bold bg-clackr-accent/15 shadow-sm"
@@ -95,7 +108,10 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
         {(["easy", "hard"] as const).map((d) => (
           <button
             key={d}
+            type="button"
             onClick={() => dispatch(setDifficulty(d))}
+            aria-pressed={difficulty === d}
+            aria-label={`Difficulty ${d}`}
             className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all capitalize ${
               difficulty === d
                 ? "text-clackr-accent font-bold bg-clackr-accent/15 shadow-sm"
@@ -112,7 +128,10 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
         {(["time", "words", "quote", "zen", "code"] as const).map((m) => (
           <button
             key={m}
+            type="button"
             onClick={() => dispatch(setMode(m))}
+            aria-pressed={mode === m}
+            aria-label={`Mode ${m}`}
             className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all uppercase text-[10px] md:text-[11px] lg:text-xs font-bold tracking-wider ${
               mode === m
                 ? "bg-clackr-accent/15 text-clackr-accent font-bold shadow-sm"
@@ -131,7 +150,10 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
             {[15, 30, 60, 120].map((d) => (
               <button
                 key={d}
+                type="button"
                 onClick={() => dispatch(setDuration(d))}
+                aria-pressed={duration === d}
+                aria-label={`Duration ${d} seconds`}
                 className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
                   duration === d
                     ? "bg-clackr-accent/15 text-clackr-accent font-bold shadow-sm"
@@ -149,7 +171,10 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
             {[10, 25, 50, 100].map((w) => (
               <button
                 key={w}
+                type="button"
                 onClick={() => dispatch(setWordCount(w))}
+                aria-pressed={wordCount === w}
+                aria-label={`Word count ${w}`}
                 className={`px-2 py-0.5 lg:px-2.5 rounded-md transition-all ${
                   wordCount === w
                     ? "bg-clackr-accent/15 text-clackr-accent font-bold shadow-sm"
@@ -169,6 +194,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
       {/* Group 5: Active Theme Quick Toggle */}
       <button
+        type="button"
         onClick={handleToggleTheme}
         className="flex items-center justify-center p-1.5 bg-clackr-fg/[0.03] border border-clackr-muted/5 rounded-lg shadow-inner text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all duration-200 flex-shrink-0"
         title={`Current theme: ${activeTheme} (Click to cycle)`}
@@ -179,6 +205,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
       {/* Group 6: Custom Test Setup */}
       <button
+        type="button"
         onClick={onOpenCustomTest}
         className="flex items-center justify-center p-1.5 bg-clackr-fg/[0.03] border border-clackr-muted/5 rounded-lg shadow-inner text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all duration-200 flex-shrink-0"
         title="Custom Test Setup"
@@ -189,6 +216,7 @@ export default function TestConfig({ onOpenCustomTest }: TestConfigProps) {
 
       {/* Group 7: Quick Sound Mute/Unmute Toggle */}
       <button
+        type="button"
         onClick={() => dispatch(toggleSound())}
         className={`flex items-center justify-center p-1.5 bg-clackr-fg/[0.03] border border-clackr-muted/5 rounded-lg shadow-inner transition-all duration-200 flex-shrink-0 ${
           soundEnabled ? "text-clackr-accent" : "text-clackr-muted/50 hover:text-clackr-fg"
