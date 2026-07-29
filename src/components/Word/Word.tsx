@@ -8,6 +8,12 @@ interface WordProps {
   index: number;
 }
 
+// Static CSS class constants defined outside render loop to eliminate string allocation overhead
+const CLASS_UNTYPED = "text-clackr-untyped transition-colors duration-100";
+const CLASS_CORRECT = "text-clackr-correct font-medium";
+const CLASS_ERROR = "text-clackr-error font-black border-b-[2.5px] border-clackr-error bg-clackr-error/30 rounded-[2px] px-[1.5px] shadow-sm";
+const CLASS_EXTRA = "text-clackr-error font-black border-b-[2.5px] border-clackr-error bg-clackr-error/40 rounded-[2px] px-[2px] shadow-sm";
+
 const Word = memo(function Word({ index }: WordProps) {
   const word = useSelector((state: RootState) => state.test.words[index] || "");
   const isActive = useSelector((state: RootState) => state.test.currentWordIndex === index);
@@ -24,23 +30,20 @@ const Word = memo(function Word({ index }: WordProps) {
 
   // Render normal characters
   const letters = word.split("").map((char, charIdx) => {
-    let charClass = "text-clackr-untyped transition-colors duration-100";
-    
     const wasTyped = charIdx < typed.length;
     const isCharCorrect = wasTyped && typed[charIdx] === char;
+    const charClass = wasTyped
+      ? isCharCorrect
+        ? CLASS_CORRECT
+        : CLASS_ERROR
+      : CLASS_UNTYPED;
 
-    if (wasTyped) {
-      if (isCharCorrect) {
-        charClass = "text-clackr-correct font-medium";
-      } else {
-        charClass = "text-clackr-error font-black border-b-[2.5px] border-clackr-error bg-clackr-error/30 rounded-[2px] px-[1.5px] shadow-sm";
-      }
-    }
+    const isCaretHere = isActive && charIdx === typed.length;
 
     return (
       <span 
         key={charIdx} 
-        id={isActive && charIdx === typed.length ? "active-char" : undefined} 
+        id={isCaretHere ? "active-char" : undefined} 
         className="relative"
       >
         <span className={charClass}>{char}</span>
@@ -55,16 +58,17 @@ const Word = memo(function Word({ index }: WordProps) {
       extraLetters.push(
         <span 
           key={`extra-${i}`} 
-          id={isActive && i === typed.length ? "active-char" : undefined} 
           className="relative"
         >
-          <span className="text-clackr-error font-black border-b-[2.5px] border-clackr-error bg-clackr-error/40 rounded-[2px] px-[2px] shadow-sm">
+          <span className={CLASS_EXTRA}>
             {typed[i]}
           </span>
         </span>
       );
     }
   }
+
+  const isCaretAtEnd = isActive && typed.length >= word.length;
 
   return (
     <span
@@ -78,9 +82,9 @@ const Word = memo(function Word({ index }: WordProps) {
     >
       {letters}
       {extraLetters}
-      {/* If caret is at the end of the word or extra letters */}
+      {/* Caret target when cursor is at or past the end of the word */}
       <span 
-        id={isActive && typed.length >= word.length ? "active-char" : undefined} 
+        id={isCaretAtEnd ? "active-char" : undefined} 
         className="inline-block w-0"
       >
         <span className="invisible">a</span>
