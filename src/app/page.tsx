@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { initTest, resetTest } from "@/store/testSlice";
 import { toggleKeyboard } from "@/store/settingsSlice";
 import { generateWords } from "@/lib/wordGenerator";
 import { soundManager } from "@/lib/soundManager";
-import { Keyboard as KeyIcon } from "lucide-react";
 
 import Layout from "@/components/Layout/Layout";
 import TypingArea from "@/components/TypingArea/TypingArea";
@@ -28,13 +27,17 @@ export default function Home() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
 
+  // Keep ref of modal states for global hotkey handling without listener thrashing
+  const modalsOpenRef = useRef(false);
+  modalsOpenRef.current = isSettingsOpen || isHistoryOpen || isCustomOpen;
+
   // Handler to retry the exact same word list
-  const handleRestart = React.useCallback(() => {
+  const handleRestart = useCallback(() => {
     dispatch(resetTest());
   }, [dispatch]);
 
   // Handler to generate a brand new word list
-  const handleNextTest = React.useCallback(() => {
+  const handleNextTest = useCallback(() => {
     const newWords = generateWords({
       mode,
       difficulty,
@@ -69,7 +72,7 @@ export default function Home() {
 
       // Tab key quick restart (works in all test states)
       if (e.key === "Tab") {
-        if (isSettingsOpen || isHistoryOpen || isCustomOpen) return;
+        if (modalsOpenRef.current) return;
         e.preventDefault();
         soundManager.playSound(undefined, undefined, "Tab");
         if (status === "finished") {
@@ -80,16 +83,16 @@ export default function Home() {
         return;
       }
 
-      // If typing test is actively running, don't allow typing shortcuts
+      // If typing test is actively running, don't allow hotkeys
       if (status === "running") return;
 
-      // Check if user is typing in settings inputs
+      // Check if user is typing in settings/inputs
       const active = document.activeElement;
       if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
         return;
       }
 
-      // K toggle keyboard view
+      // K toggle virtual keyboard view
       if (e.key === "k" || e.key === "K") {
         e.preventDefault();
         dispatch(toggleKeyboard());
@@ -98,19 +101,7 @@ export default function Home() {
 
     window.addEventListener("keydown", handleGlobalKeys);
     return () => window.removeEventListener("keydown", handleGlobalKeys);
-  }, [status, isSettingsOpen, isHistoryOpen, handleRestart, handleNextTest, dispatch]);
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [isMobileDismissed, setIsMobileDismissed] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [status, handleRestart, handleNextTest, dispatch]);
 
   return (
     <Layout

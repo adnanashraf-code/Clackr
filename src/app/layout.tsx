@@ -131,7 +131,7 @@ export const metadata: Metadata = {
   verification: {
     google: "google11e86a920a740421",
   },
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
 };
 
 // Google JSON-LD Structured Data Schema
@@ -153,7 +153,7 @@ const webAppSchema = {
         "TypeRacer",
         "Typing.com",
         "clackr",
-        "clackr typing test"
+        "clackr typing test",
       ],
       "description":
         "Minimal, distraction-free typing speed test application with real-time WPM analytics, custom modes, and mechanical key sounds.",
@@ -243,7 +243,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fontSans.variable} ${fontMono.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="canonical" href="https://clackr-plum.vercel.app/" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script
           type="application/ld+json"
@@ -251,12 +250,10 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen flex flex-col font-sans selection:bg-clackr-accent/20" suppressHydrationWarning>
-        <ReduxProvider>
-          {children}
-        </ReduxProvider>
+        <ReduxProvider>{children}</ReduxProvider>
 
         {/* Clean Semantic SEO content for Search Engine Crawlers */}
-        <footer className="sr-only" aria-hidden="true">
+        <footer className="sr-only">
           <h1>clackr — Minimal Distraction-Free Typing Speed Test</h1>
           <h2>High-Performance Online Typing Test & Speed Practice</h2>
           <p>
