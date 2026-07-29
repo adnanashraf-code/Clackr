@@ -1,5 +1,3 @@
-
-
 class SoundSynthesizer {
   private ctx: AudioContext | null = null;
 
@@ -9,7 +7,7 @@ class SoundSynthesizer {
   private mechLoadFailed = false;
   private peakTime = 0; // Timestamp of the highest peak in the audio recording
 
-  // Local settings synced from the Redux store to prevent circular dependencies
+  // Local settings synced from the Redux store
   private soundEnabled = true;
   private soundType: "clack" | "mechanical" | "bubble" = "mechanical";
   private soundVolume = 0.5;
@@ -20,7 +18,7 @@ class SoundSynthesizer {
     this.soundVolume = volume;
   }
 
-  // Preload mechanical sound buffer on application startup to avoid fallback synth sound on first keypress
+  // Preload mechanical sound buffer on application startup
   public preload() {
     if (typeof window === "undefined") return;
     if (!this.ctx) {
@@ -30,13 +28,12 @@ class SoundSynthesizer {
           this.ctx = new AudioCtx();
           this.loadMechBuffer();
         } catch (e) {
-          // Silent catch to prevent errors in environments without Web Audio API support
+          // Silent catch for environments without Web Audio API support
         }
       }
     }
 
     // Early-resume: on the very first user gesture, wake up the AudioContext
-    // so it's already in "running" state when the user starts typing.
     const earlyResume = () => {
       if (this.ctx && this.ctx.state === "suspended") {
         this.ctx.resume().catch(() => {});
@@ -45,15 +42,13 @@ class SoundSynthesizer {
       window.removeEventListener("keydown", earlyResume);
       window.removeEventListener("touchstart", earlyResume);
     };
-    window.addEventListener("click", earlyResume, { once: true });
-    window.addEventListener("keydown", earlyResume, { once: true });
-    window.addEventListener("touchstart", earlyResume, { once: true });
+
+    window.addEventListener("click", earlyResume);
+    window.addEventListener("keydown", earlyResume);
+    window.addEventListener("touchstart", earlyResume);
   }
 
   // ── AudioContext bootstrap ─────────────────────────────────────────────────
-  // Must be called synchronously inside a user-gesture handler (keydown/click).
-  // Calls resume() fire-and-forget — browsers honour it because we're in
-  // the user-gesture call stack. Audio is scheduled near-instantly (3ms buffer).
   private initCtx(): boolean {
     if (typeof window === "undefined") return false;
 
@@ -67,8 +62,6 @@ class SoundSynthesizer {
       }
     }
 
-    // Fire-and-forget resume — still inside the keydown/click call stack,
-    // so the browser grants permission.
     if (this.ctx.state === "suspended") {
       this.ctx.resume().catch(() => {});
     }
@@ -77,8 +70,6 @@ class SoundSynthesizer {
   }
 
   // ── OGG file loader ────────────────────────────────────────────────────────
-  // Decodes embedded Base64 data URL directly. Once decoded, the AudioBuffer
-  // lives in RAM, so the original public/my sound.ogg file can be safely deleted.
   private async loadMechBuffer() {
     if (this.mechBuffer || this.mechLoading || this.mechLoadFailed) return;
     if (!this.ctx) return;
@@ -104,9 +95,6 @@ class SoundSynthesizer {
           }
         }
         this.peakTime = maxValIdx / this.mechBuffer.sampleRate;
-        if (process.env.NODE_ENV === "development") {
-          console.log(`[Clackr] ✅ Mechanical OGG loaded from "${url}" — duration: ${this.mechBuffer.duration.toFixed(2)}s, peak at ${this.peakTime.toFixed(4)}s`);
-        }
         this.mechLoading = false;
         return;
       } catch (err) {
@@ -128,7 +116,7 @@ class SoundSynthesizer {
     // Start playing 80ms before the peak to capture the click attack transient.
     const offset = Math.max(0, this.peakTime - 0.08);
 
-    // Use natural duration of the sound starting from the sound offset, otherwise cap it to prevent overlapping issues
+    // Use natural duration of the sound starting from the sound offset
     const maxDur = key === " " ? 0.50 : key === "Backspace" ? 0.40 : 0.32;
     const playDuration = Math.min(buf.duration - offset, maxDur);
 
@@ -145,23 +133,24 @@ class SoundSynthesizer {
     source.playbackRate.value = rate;
 
     const gain = ctx.createGain();
-    // Force extreme high volume amplification (3.0 for spacebar, 2.5 for other keys)
-    const finalVolume = key === " " ? 3.00 : 2.50;
+    // High volume amplification multiplied by user's volume setting
+    const baseVolume = key === " " ? 3.00 : 2.50;
+    const finalVolume = baseVolume * Math.max(0, Math.min(1, volume));
+
     gain.gain.setValueAtTime(finalVolume, startAt);
     
-    // Smooth fade-out in the last 25% of the click duration to avoid any popping/clicking artifacts
+    // Smooth fade-out in the last 25% of the click duration
     const fadeStart = startAt + playDuration * 0.75;
     gain.gain.setValueAtTime(finalVolume, fadeStart);
     gain.gain.linearRampToValueAtTime(0, startAt + playDuration);
 
     source.connect(gain);
     gain.connect(ctx.destination);
-    source.start(startAt, offset, playDuration);  // start at the click transient, play for playDuration
+    source.start(startAt, offset, playDuration);
     return true;
   }
 
-
-  // ── Main entry point (SYNCHRONOUS — must stay sync for user-gesture chain) ──
+  // ── Main entry point ───────────────────────────────────────────────────────
   public playSound(
     type?: "clack" | "mechanical" | "bubble" | "error",
     volume?: number,
@@ -176,15 +165,13 @@ class SoundSynthesizer {
       const activeType = type || this.soundType;
       const activeVolume = volume !== undefined ? volume : this.soundVolume;
 
-      // Schedule almost immediately — only 3ms buffer for audio graph setup.
-      // The old 50ms delay caused a perceptible gap between keypress visual and audio.
+      // Schedule almost immediately (3ms buffer for audio graph setup)
       const now = ctx.currentTime + 0.003;
       const rf = 0.92 + Math.random() * 0.16;
 
       // ── Mechanical ────────────────────────────────────────────────────────
       if (activeType === "mechanical") {
         if (this.playMechFromBuffer(activeVolume, key, now)) return;
-        // Kick off OGG load (async, doesn't block)
         this.loadMechBuffer();
         return;
       }

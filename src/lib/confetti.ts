@@ -1,5 +1,20 @@
+// Colors mapping directly to Clackr theme accents (blue, green, red, yellow, pink, purple, cyan)
+const CONFETTI_COLORS = ["#6C93D9", "#7FB88F", "#D96C58", "#E2B714", "#D16075", "#A277FF", "#66D9EF"];
+
+interface ConfettiParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  color: string;
+  r: number;
+  rotation: number;
+  rotationSpeed: number;
+  opacity: number;
+}
+
 export function triggerConfetti() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || typeof document === "undefined") return () => {};
 
   const canvas = document.createElement("canvas");
   canvas.style.position = "fixed";
@@ -12,7 +27,10 @@ export function triggerConfetti() {
   document.body.appendChild(canvas);
 
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) {
+    if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+    return () => {};
+  }
 
   let width = (canvas.width = window.innerWidth);
   let height = (canvas.height = window.innerHeight);
@@ -23,23 +41,9 @@ export function triggerConfetti() {
   };
   window.addEventListener("resize", handleResize);
 
-  // Colors mapping directly to Clackr theme accents (blue, green, red, yellow, pink, purple, cyan)
-  const colors = ["#6C93D9", "#7FB88F", "#D96C58", "#E2B714", "#D16075", "#A277FF", "#66D9EF"];
-  
-  const particles: Array<{
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    color: string;
-    r: number;
-    rotation: number;
-    rotationSpeed: number;
-    opacity: number;
-  }> = [];
-
-  // Generate 150 particles bursting from left and right bottom corners and top center
+  const particles: ConfettiParticle[] = [];
   const particleCount = 140;
+
   for (let i = 0; i < particleCount; i++) {
     const fromLeft = Math.random() < 0.4;
     const fromRight = !fromLeft && Math.random() < 0.67;
@@ -74,7 +78,7 @@ export function triggerConfetti() {
       y,
       vx,
       vy,
-      color: colors[Math.floor(Math.random() * colors.length)],
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
       r: Math.random() * 6 + 4,
       rotation: Math.random() * Math.PI * 2,
       rotationSpeed: Math.random() * 0.2 - 0.1,
@@ -83,10 +87,20 @@ export function triggerConfetti() {
   }
 
   let frames = 0;
+  let animId: number | null = null;
   let active = true;
 
+  const cleanup = () => {
+    active = false;
+    if (animId !== null) cancelAnimationFrame(animId);
+    window.removeEventListener("resize", handleResize);
+    if (canvas.parentNode) {
+      canvas.parentNode.removeChild(canvas);
+    }
+  };
+
   function update() {
-    if (!ctx) return;
+    if (!ctx || !active) return;
     ctx.clearRect(0, 0, width, height);
 
     let hasVisibleParticles = false;
@@ -99,7 +113,7 @@ export function triggerConfetti() {
       p.y += p.vy;
       p.rotation += p.rotationSpeed;
 
-      // Start fading out when particle goes below 75% of screen height
+      // Start fading out when particle goes below 60% of screen height
       if (p.y > height * 0.6) {
         p.opacity -= 0.015;
       }
@@ -127,18 +141,13 @@ export function triggerConfetti() {
 
     frames++;
     if (hasVisibleParticles && frames < 240 && active) {
-      requestAnimationFrame(update);
+      animId = requestAnimationFrame(update);
     } else {
-      window.removeEventListener("resize", handleResize);
-      if (canvas.parentNode) {
-        document.body.removeChild(canvas);
-      }
+      cleanup();
     }
   }
 
-  update();
+  animId = requestAnimationFrame(update);
 
-  return () => {
-    active = false;
-  };
+  return cleanup;
 }
