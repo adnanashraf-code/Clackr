@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { finishTest } from "@/store/testSlice";
 import Word from "../Word/Word";
 import { useTypingEngine } from "@/hooks/useTypingEngine";
 import { RotateCcw, Keyboard as KeyIcon } from "lucide-react";
-import { getCharStats } from "@/lib/statsCalculator";
 
 interface TypingAreaProps {
   onRestart: () => void;
@@ -22,13 +20,13 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
   const [caretPos, setCaretPos] = useState({ left: 0, top: 0, height: 24 });
   const [isRotating, setIsRotating] = useState(false);
 
-  const handleRestartClick = () => {
+  const handleRestartClick = useCallback(() => {
     setIsRotating(true);
     onRestart();
     setTimeout(() => {
       setIsRotating(false);
     }, 450);
-  };
+  }, [onRestart]);
 
   // Granular Redux selectors to optimize rendering and prevent unnecessary keystroke re-renders
   const words = useSelector((state: RootState) => state.test.words);
@@ -38,29 +36,29 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
   const wordCount = useSelector((state: RootState) => state.test.wordCount);
   const startTime = useSelector((state: RootState) => state.test.startTime);
   const currentWordIndex = useSelector((state: RootState) => state.test.currentWordIndex);
-  const typedWords = useSelector((state: RootState) => state.test.typedWords);
   const typedInput = useSelector((state: RootState) => state.test.typedInput);
   const wpmHistory = useSelector((state: RootState) => state.test.wpmHistory);
   const totalKeystrokes = useSelector((state: RootState) => state.test.totalKeystrokes);
   const correctKeystrokes = useSelector((state: RootState) => state.test.correctKeystrokes);
 
   const fontFamily = useSelector((state: RootState) => state.settings.fontFamily);
-  const realtimeWpm = useSelector((state: RootState) => state.settings.realtimeWpm);
   const keyboardSize = useSelector((state: RootState) => state.settings.keyboardSize);
   const keyboardEnabled = useSelector((state: RootState) => state.settings.keyboardEnabled);
 
-  // Live Accuracy calculation (inline to avoid closure allocation on every render)
-  const liveAccuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+  // Live Accuracy calculation (memoized)
+  const liveAccuracy = useMemo(() => {
+    return totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+  }, [totalKeystrokes, correctKeystrokes]);
 
   // Bind custom typing engine hook
-  const { handleReset, handleKeyDown, handleInputChange } = useTypingEngine(inputRef);
+  const { handleKeyDown, handleInputChange } = useTypingEngine(inputRef);
 
-  // Monitor and handle container clicks to focus hidden input
-  const handleContainerClick = () => {
+  // Bind container click to focus hidden input
+  const handleContainerClick = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
-  };
+  }, []);
 
   // Combined scroll + caret positioning: scroll FIRST (instant), then measure caret
   useEffect(() => {
@@ -106,7 +104,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
     const animId = requestAnimationFrame(handleUpdateCaret);
     window.addEventListener("resize", handleUpdateCaret);
 
-    // Re-measure after custom fonts finish loading (prevents misalignment on refresh)
+    // Re-measure after custom fonts finish loading
     let fontRafId: number | undefined;
     if (typeof document !== "undefined" && document.fonts) {
       document.fonts.ready.then(() => {
@@ -121,9 +119,9 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
     };
   }, [typedInput, currentWordIndex, status]);
 
-  // Re-focus helper
-  const handleFocus = () => setIsFocused(true);
-  const handleBlur = () => setIsFocused(false);
+  // Re-focus helpers
+  const handleFocus = useCallback(() => setIsFocused(true), []);
+  const handleBlur = useCallback(() => setIsFocused(false), []);
 
   // Auto-focus on load or status change
   useEffect(() => {
@@ -134,22 +132,20 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
     }
   }, [status]);
 
-  // Window-level keypress listener to capture focus if user types when blurred
+  // Unified window-level keypress listener to capture focus if user types when blurred
   useEffect(() => {
     const handleWindowKeyDown = (e: KeyboardEvent) => {
-      const active = document.activeElement;
-      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "BUTTON")) {
+      if (isFocused) return;
+
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea" || activeTag === "select" || activeTag === "button") {
         return;
       }
       
-      if (
-        !isFocused &&
-        inputRef.current &&
-        e.key.length === 1 &&
-        !e.ctrlKey &&
-        !e.altKey &&
-        !e.metaKey
-      ) {
+      const ignoredKeys = ["Alt", "Control", "Shift", "Meta", "Escape", "Tab", "CapsLock"];
+      if (ignoredKeys.includes(e.key)) return;
+
+      if (inputRef.current) {
         inputRef.current.focus();
       }
     };
@@ -171,32 +167,10 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
     }, 200);
 
     return () => clearInterval(interval);
-  }, [status, startTime, mode, duration, dispatch]);
-
-  // Global keydown to focus typing area
-  useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (isFocused) return;
-      
-      const activeTag = document.activeElement?.tagName.toLowerCase();
-      if (activeTag === "input" || activeTag === "textarea" || activeTag === "select") {
-        return;
-      }
-      
-      const ignoredKeys = ["Alt", "Control", "Shift", "Meta", "Escape", "Tab", "CapsLock"];
-      if (ignoredKeys.includes(e.key)) return;
-      
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    };
-
-    window.addEventListener("keydown", handleGlobalKeyDown);
-    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [isFocused]);
+  }, [status, startTime]);
 
   // Calculate live numbers
-  const displayTimer = () => {
+  const displayTimer = useMemo(() => {
     if (mode === "time") {
       if (status === "running") {
         return Math.max(0, duration - localTimer);
@@ -208,29 +182,30 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
       }
       return 0;
     }
-  };
+  }, [mode, status, duration, localTimer]);
 
-  const getLiveWpm = () => {
+  const liveWpm = useMemo(() => {
     if (wpmHistory.length > 0) {
       return wpmHistory[wpmHistory.length - 1].wpm;
     }
     return 0;
-  };
+  }, [wpmHistory]);
 
   // Dynamic height configuration based on keyboard size
-  let containerHeightClass = "max-h-[145px]"; // ~4 lines (for small or no keyboard)
-  
-  if (keyboardEnabled) {
-    if (keyboardSize === "large") {
-      containerHeightClass = "max-h-[75px]"; // ~2 lines
-    } else if (keyboardSize === "medium") {
-      containerHeightClass = "max-h-[110px]"; // ~3 lines
-    }
-  }
+  const containerHeightClass = useMemo(() => {
+    if (!keyboardEnabled) return "max-h-[145px]";
+    if (keyboardSize === "large") return "max-h-[75px]";
+    if (keyboardSize === "medium") return "max-h-[110px]";
+    return "max-h-[145px]";
+  }, [keyboardEnabled, keyboardSize]);
 
   return (
-    <div id="typing-area-container" className={`w-full flex flex-col gap-2.5 select-none relative focus:outline-none ${!keyboardEnabled ? "flex-1" : ""}`}>
-      
+    <div 
+      id="typing-area-container" 
+      className={`w-full flex flex-col gap-2.5 select-none relative focus:outline-none ${!keyboardEnabled ? "flex-1" : ""}`}
+      role="region"
+      aria-label="Typing test area"
+    >
       {/* Live Stats Dashboard */}
       <div className="flex justify-center gap-12 md:gap-20 items-center w-full max-w-2xl mx-auto pt-5 pb-1 select-none">
         {/* Column 1: WPM */}
@@ -239,7 +214,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
             wpm
           </span>
           <span className="font-mono text-2xl md:text-3xl font-extrabold text-clackr-accent leading-none">
-            {status === "idle" ? 0 : getLiveWpm()}
+            {status === "idle" ? 0 : liveWpm}
           </span>
         </div>
 
@@ -260,7 +235,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
             {mode === "time" ? "time left" : "time"}
           </span>
           <span className="font-mono text-2xl md:text-3xl font-extrabold text-clackr-fg leading-none flex items-baseline justify-center">
-            {displayTimer()}
+            {displayTimer}
             <span className="text-clackr-muted text-xs md:text-sm font-semibold ml-0.5">s</span>
           </span>
         </div>
@@ -284,7 +259,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
       <div className={`relative w-full ${!keyboardEnabled ? "flex-1 flex flex-col justify-start pt-8 md:pt-16" : ""}`}>
         <div
           onClick={handleContainerClick}
-          className={`relative p-2 cursor-text flex items-center justify-center w-full`}
+          className="relative p-2 cursor-text flex items-center justify-center w-full"
         >
           {/* Input field capturing desktop physical keys and mobile soft keyboard (Gboard / iOS) */}
           <input
@@ -296,6 +271,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
+            aria-label="Typing test input buffer"
             className="absolute inset-0 opacity-0 cursor-text w-full h-full text-base z-20"
             autoComplete="off"
             autoCapitalize="off"
@@ -309,7 +285,7 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
             className={`w-full max-w-6xl mx-auto flex flex-wrap gap-x-[10px] gap-y-0 ${containerHeightClass} overflow-hidden leading-tight px-1 select-none ${fontFamily} ${!isFocused ? "blur-[3px] select-none pointer-events-none" : ""}`}
           >
             {words.map((_, idx) => (
-              <Word key={idx} index={idx} />
+              <Word key={`word-${idx}`} index={idx} />
             ))}
           </div>
 
@@ -331,16 +307,18 @@ export default function TypingArea({ onRestart }: TypingAreaProps) {
         {/* Restart Button Shortcut indicator */}
         <div className="flex justify-center items-center py-1">
           <button
+            type="button"
             onClick={handleRestartClick}
             onMouseDown={(e) => e.preventDefault()}
             title="Restart Test (Tab)"
+            aria-label="Restart test"
             className="p-2 rounded-xl text-clackr-muted hover:text-clackr-fg hover:bg-clackr-fg/5 transition-all flex items-center justify-center font-mono text-xs"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${isRotating ? "animate-spin-once" : ""}`} />
           </button>
         </div>
 
-        {/* Blur Focus Overlay (Covers both words and restart button to prevent overlapping) */}
+        {/* Blur Focus Overlay */}
         {!isFocused && (
           <div 
             onClick={handleContainerClick}
