@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Keyboard, Zap, Sparkles, BarChart3, Volume2 } from "lucide-react";
 
+const CLACK_LETTERS = ["C", "L", "A", "C", "K"];
+
 export default function ShareClient() {
   const router = useRouter();
   const [progress, setProgress] = useState(0);
@@ -61,9 +63,9 @@ export default function ShareClient() {
 
         {/* Animated Keycaps Graphic */}
         <div className="flex items-center justify-center gap-2 my-1">
-          {["C", "L", "A", "C", "K"].map((letter, idx) => (
+          {CLACK_LETTERS.map((letter, idx) => (
             <div
-              key={idx}
+              key={`letter-${idx}`}
               className="w-8 h-9 rounded-lg bg-[#161826] border border-white/10 text-clackr-accent font-mono text-xs font-bold flex items-center justify-center shadow-[0_3px_0_rgba(255,255,255,0.08)] animate-bounce"
               style={{
                 animationDelay: `${idx * 0.12}s`,
@@ -76,7 +78,14 @@ export default function ShareClient() {
         </div>
 
         {/* Progress Bar & Status */}
-        <div className="w-full space-y-2.5 pt-2">
+        <div 
+          className="w-full space-y-2.5 pt-2"
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Launching session progress"
+        >
           <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
             <div
               className="h-full bg-gradient-to-r from-clackr-accent to-purple-400 rounded-full transition-all duration-75 ease-out shadow-[0_0_12px_rgba(108,147,217,0.8)]"
