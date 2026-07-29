@@ -64,22 +64,28 @@ const initialState: TestState = {
   backspaceCount: 0,
 };
 
+// Helper function to DRY up resetting active typing metrics
+function resetProgressState(state: TestState) {
+  state.status = "idle";
+  state.typedInput = "";
+  state.typedWords = [];
+  state.currentWordIndex = 0;
+  state.startTime = null;
+  state.endTime = null;
+  state.wpmHistory = [];
+  state.totalKeystrokes = 0;
+  state.correctKeystrokes = 0;
+  state.errorKeystrokes = 0;
+  state.backspaceCount = 0;
+}
+
 const testSlice = createSlice({
   name: "test",
   initialState,
   reducers: {
     setMode(state, action: PayloadAction<TestState["mode"]>) {
       state.mode = action.payload;
-      state.status = "idle";
-      state.typedInput = "";
-      state.typedWords = [];
-      state.currentWordIndex = 0;
-      state.startTime = null;
-      state.endTime = null;
-      state.wpmHistory = [];
-      state.totalKeystrokes = 0;
-      state.correctKeystrokes = 0;
-      state.errorKeystrokes = 0;
+      resetProgressState(state);
     },
     setDuration(state, action: PayloadAction<number>) {
       state.duration = action.payload;
@@ -109,17 +115,7 @@ const testSlice = createSlice({
       state.punctuation = action.payload.punctuation;
       state.numbers = action.payload.numbers;
       state.capitals = action.payload.capitals;
-      state.status = "idle";
-      state.typedInput = "";
-      state.typedWords = [];
-      state.currentWordIndex = 0;
-      state.startTime = null;
-      state.endTime = null;
-      state.wpmHistory = [];
-      state.totalKeystrokes = 0;
-      state.correctKeystrokes = 0;
-      state.errorKeystrokes = 0;
-      state.backspaceCount = 0;
+      resetProgressState(state);
     },
     togglePunctuation(state) {
       state.punctuation = !state.punctuation;
@@ -135,17 +131,7 @@ const testSlice = createSlice({
     },
     initTest(state, action: PayloadAction<string[]>) {
       state.words = action.payload;
-      state.status = "idle";
-      state.typedInput = "";
-      state.typedWords = [];
-      state.currentWordIndex = 0;
-      state.startTime = null;
-      state.endTime = null;
-      state.wpmHistory = [];
-      state.totalKeystrokes = 0;
-      state.correctKeystrokes = 0;
-      state.errorKeystrokes = 0;
-      state.backspaceCount = 0;
+      resetProgressState(state);
     },
     startTest(state) {
       state.status = "running";
@@ -233,17 +219,7 @@ const testSlice = createSlice({
       }
     },
     resetTest(state) {
-      state.status = "idle";
-      state.typedInput = "";
-      state.typedWords = [];
-      state.currentWordIndex = 0;
-      state.startTime = null;
-      state.endTime = null;
-      state.wpmHistory = [];
-      state.totalKeystrokes = 0;
-      state.correctKeystrokes = 0;
-      state.errorKeystrokes = 0;
-      state.backspaceCount = 0;
+      resetProgressState(state);
     },
   },
 });
